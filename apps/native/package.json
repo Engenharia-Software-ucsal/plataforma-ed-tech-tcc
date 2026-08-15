@@ -10,8 +10,14 @@
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
     "web": "expo start --web",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!(.pnpm|(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|uniwind|heroui-native))"
+    ]
   },
   "dependencies": {
     "@busuucsal-v3/env": "workspace:*",
@@ -55,13 +61,12 @@
   },
   "devDependencies": {
     "@busuucsal-v3/config": "workspace:*",
-    "@testing-library/jest-dom": "^6.6.3",
+    "@react-native/jest-preset": "^0.86.0",
     "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^26.1.2",
     "@types/react": "~19.2.17",
-    "@vitejs/plugin-react": "^4.3.4",
-    "jsdom": "^25.0.1",
-    "typescript": "~6.0.3",
-    "vitest": "^3.2.4"
+    "jest-expo": "~57.0.4",
+    "typescript": "~6.0.3"
   }
 }
