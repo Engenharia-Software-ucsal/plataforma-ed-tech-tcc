@@ -1,0 +1,3 @@
+{
+  "extends": "@busuucsal-v3/config/tsconfig.base.json"
+}

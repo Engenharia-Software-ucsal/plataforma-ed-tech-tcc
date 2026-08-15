@@ -1,0 +1,1122 @@
+{
+  "version": "2.14",
+  "children": [
+    {
+      "type": "frame",
+      "id": "s7OhRx",
+      "x": 759,
+      "y": -185,
+      "name": "Status Bar",
+      "reusable": true,
+      "width": 390,
+      "height": 62,
+      "fill": "$surface-primary",
+      "padding": [
+        38,
+        20,
+        0,
+        20
+      ],
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "H7rNp8",
+          "name": "Time",
+          "fill": "$foreground-primary",
+          "content": "9:41",
+          "fontFamily": "Inter",
+          "fontSize": 15,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "z317B",
+          "name": "Right Icons",
+          "gap": 6,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "MpuvP",
+              "name": "Signal",
+              "width": 16,
+              "height": 16,
+              "icon": "signal",
+              "library": "lucide",
+              "fill": "$foreground-primary"
+            },
+            {
+              "type": "icon",
+              "id": "hrSFt",
+              "name": "Wifi",
+              "width": 16,
+              "height": 16,
+              "icon": "wifi",
+              "library": "lucide",
+              "fill": "$foreground-primary"
+            },
+            {
+              "type": "icon",
+              "id": "FThpX",
+              "name": "Battery",
+              "width": 16,
+              "height": 16,
+              "icon": "battery-full",
+              "library": "lucide",
+              "fill": "$foreground-primary"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ZfS01",
+      "x": 759,
+      "y": -345,
+      "name": "Tab Bar",
+      "reusable": true,
+      "width": 390,
+      "height": 80,
+      "fill": "$surface-primary",
+      "padding": [
+        8,
+        16,
+        12,
+        16
+      ],
+      "justifyContent": "space_around",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "mbWHQ",
+          "name": "Tab Ônibus",
+          "cornerRadius": 16,
+          "layout": "vertical",
+          "gap": 4,
+          "padding": [
+            8,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "m6SJv",
+              "name": "Icon Ônibus",
+              "width": 22,
+              "height": 22,
+              "icon": "bus",
+              "library": "lucide",
+              "fill": "$foreground-muted"
+            },
+            {
+              "type": "text",
+              "id": "ABT5L",
+              "name": "Label Ônibus",
+              "fill": "$foreground-muted",
+              "content": "Ônibus",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "nRggO",
+          "name": "Tab Aulas",
+          "cornerRadius": 16,
+          "layout": "vertical",
+          "gap": 4,
+          "padding": [
+            8,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "hi0Cy",
+              "name": "Icon Aulas",
+              "width": 22,
+              "height": 22,
+              "icon": "book-open",
+              "library": "lucide",
+              "fill": "$foreground-muted"
+            },
+            {
+              "type": "text",
+              "id": "Y1z8b",
+              "name": "Label Aulas",
+              "fill": "$foreground-muted",
+              "content": "Aulas",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "KIF17",
+      "x": 759,
+      "y": -505,
+      "name": "Bus Time Card",
+      "reusable": true,
+      "width": 350,
+      "fill": "$surface-secondary",
+      "cornerRadius": 16,
+      "effect": {
+        "type": "shadow",
+        "shadowType": "outer",
+        "color": "#0000000a",
+        "offset": {
+          "x": 0,
+          "y": 1
+        },
+        "blur": 2
+      },
+      "gap": 12,
+      "padding": [
+        14,
+        16
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "RwXje",
+          "name": "Bus Info",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 2,
+          "children": [
+            {
+              "type": "text",
+              "id": "GUdUb",
+              "name": "Bus Route",
+              "fill": "$foreground-primary",
+              "content": "UCSAL → Estação",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "z3m13y",
+              "name": "Bus Status",
+              "fill": "$foreground-muted",
+              "content": "Saída do campus",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "C14Mjs",
+          "name": "Bus Time",
+          "fill": "$accent-primary",
+          "content": "07:30",
+          "fontFamily": "Geist Mono",
+          "fontSize": 22,
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "h7Mnp",
+      "x": 759,
+      "y": -685,
+      "name": "Class Card",
+      "reusable": true,
+      "width": 350,
+      "fill": "$surface-secondary",
+      "cornerRadius": 16,
+      "effect": {
+        "type": "shadow",
+        "shadowType": "outer",
+        "color": "#0000000a",
+        "offset": {
+          "x": 0,
+          "y": 1
+        },
+        "blur": 2
+      },
+      "gap": 12,
+      "padding": [
+        14,
+        16
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "T8OjI",
+          "name": "Time Column",
+          "layout": "vertical",
+          "gap": 2,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "E7zMkm",
+              "name": "Start Time",
+              "fill": "$accent-primary",
+              "content": "08:00",
+              "fontFamily": "Geist Mono",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "CClDC",
+              "name": "End Time",
+              "fill": "$foreground-muted",
+              "content": "09:30",
+              "fontFamily": "Geist Mono",
+              "fontSize": 11,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 1,
+          "id": "qd5ql",
+          "name": "Divider",
+          "fill": "$accent-primary",
+          "width": 2,
+          "height": 48
+        },
+        {
+          "type": "frame",
+          "id": "VzNp3",
+          "name": "Class Info",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 3,
+          "children": [
+            {
+              "type": "text",
+              "id": "zUxJV",
+              "name": "Subject",
+              "fill": "$foreground-primary",
+              "content": "Engenharia de Software",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "z8sEZ7",
+              "name": "Professor",
+              "fill": "$foreground-secondary",
+              "content": "Prof. Ana Silva",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "ske7d",
+              "name": "Room Row",
+              "gap": 6,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "tJQyI",
+                  "name": "Room Icon",
+                  "width": 12,
+                  "height": 12,
+                  "icon": "map-pin",
+                  "library": "lucide",
+                  "fill": "$foreground-muted"
+                },
+                {
+                  "type": "text",
+                  "id": "iC4JT",
+                  "name": "Room",
+                  "fill": "$foreground-muted",
+                  "content": "Sala 302 · BL-A",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "oGJws",
+      "x": 1229,
+      "y": -685,
+      "name": "Tela Ônibus",
+      "clip": true,
+      "width": 390,
+      "fill": "$surface-primary",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "yViNK",
+          "type": "ref",
+          "ref": "s7OhRx",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "JLU9u",
+          "name": "Content",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            24,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Cv0WP",
+              "name": "Header",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "v9QGWY",
+                  "name": "Title",
+                  "fill": "$foreground-primary",
+                  "content": "Ônibus",
+                  "fontFamily": "Inter",
+                  "fontSize": 28,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "icon",
+                  "id": "Vn4dD",
+                  "name": "Bell",
+                  "width": 24,
+                  "height": 24,
+                  "icon": "bell",
+                  "library": "lucide",
+                  "fill": "$foreground-muted"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mcFav",
+              "name": "Next Bus Hero",
+              "width": "fill_container",
+              "fill": "$surface-inverse",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ko70M",
+                  "name": "Next Label",
+                  "fill": "#FFFFFFAA",
+                  "content": "PRÓXIMA SAÍDA",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "b14dmn",
+                  "name": "Time Row",
+                  "gap": 12,
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vEZLP",
+                      "name": "Next Time",
+                      "fill": "$foreground-inverse",
+                      "content": "07:30",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 48,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "V22FH1",
+                      "name": "Countdown",
+                      "fill": "#FFFFFFCC",
+                      "content": "em 25 min",
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PeDMC",
+                  "name": "Hero Info",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "CF2ip",
+                      "name": "Route Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "route",
+                      "library": "lucide",
+                      "fill": "#FFFFFFAA"
+                    },
+                    {
+                      "type": "text",
+                      "id": "s7oEE",
+                      "name": "Route Text",
+                      "fill": "#FFFFFFCC",
+                      "content": "UCSAL → Estação da Lapa",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "iJARt",
+              "name": "Section Header",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "bBiNh",
+                  "name": "Section Title",
+                  "fill": "$foreground-primary",
+                  "content": "Próximos horários",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "bM1aI",
+                  "name": "See All",
+                  "fill": "$accent-primary",
+                  "content": "Ver todos",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "E3t9GW",
+              "name": "Bus List",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "id": "sYzpg",
+                  "type": "ref",
+                  "ref": "KIF17",
+                  "name": "Bus 08:00",
+                  "width": "fill_container",
+                  "descendants": {
+                    "GUdUb": {
+                      "content": "UCSAL → Estação"
+                    },
+                    "z3m13y": {
+                      "content": "Saída do campus"
+                    },
+                    "C14Mjs": {
+                      "content": "08:00"
+                    }
+                  }
+                },
+                {
+                  "id": "whMdn",
+                  "type": "ref",
+                  "ref": "KIF17",
+                  "name": "Bus 08:30",
+                  "width": "fill_container",
+                  "descendants": {
+                    "GUdUb": {
+                      "content": "UCSAL → Estação"
+                    },
+                    "z3m13y": {
+                      "content": "Saída do campus"
+                    },
+                    "C14Mjs": {
+                      "content": "08:30"
+                    }
+                  }
+                },
+                {
+                  "id": "AHXPL",
+                  "type": "ref",
+                  "ref": "KIF17",
+                  "name": "Bus 09:15",
+                  "width": "fill_container",
+                  "descendants": {
+                    "GUdUb": {
+                      "content": "UCSAL → Estação"
+                    },
+                    "z3m13y": {
+                      "content": "Saída do campus"
+                    },
+                    "C14Mjs": {
+                      "content": "09:15"
+                    }
+                  }
+                },
+                {
+                  "id": "XQnrG",
+                  "type": "ref",
+                  "ref": "KIF17",
+                  "name": "Bus 10:00",
+                  "width": "fill_container",
+                  "descendants": {
+                    "GUdUb": {
+                      "content": "UCSAL → Estação"
+                    },
+                    "z3m13y": {
+                      "content": "Saída do campus"
+                    },
+                    "C14Mjs": {
+                      "content": "10:00"
+                    }
+                  }
+                },
+                {
+                  "id": "TuWan",
+                  "type": "ref",
+                  "ref": "KIF17",
+                  "name": "Bus 11:30",
+                  "width": "fill_container",
+                  "descendants": {
+                    "GUdUb": {
+                      "content": "UCSAL → Estação"
+                    },
+                    "z3m13y": {
+                      "content": "Saída do campus"
+                    },
+                    "C14Mjs": {
+                      "content": "11:30"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "Vpif1",
+          "type": "ref",
+          "ref": "ZfS01",
+          "name": "Tab Bar",
+          "width": "fill_container",
+          "descendants": {
+            "mbWHQ": {
+              "fill": "$accent-light",
+              "cornerRadius": 16
+            },
+            "m6SJv": {
+              "fill": "$accent-primary"
+            },
+            "ABT5L": {
+              "fill": "$accent-primary"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "bmNht",
+      "x": 1699,
+      "y": -685,
+      "name": "Tela Aulas",
+      "clip": true,
+      "width": 390,
+      "fill": "$surface-primary",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "l77txU",
+          "type": "ref",
+          "ref": "s7OhRx",
+          "name": "Status Bar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "z8Zaa",
+          "name": "Content",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            24,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "whCbS",
+              "name": "Header",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "E12o02",
+                  "name": "Title",
+                  "fill": "$foreground-primary",
+                  "content": "Aulas",
+                  "fontFamily": "Inter",
+                  "fontSize": 28,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "znoBc",
+                  "name": "Day Badge",
+                  "fill": "$accent-light",
+                  "cornerRadius": 9999,
+                  "gap": 6,
+                  "padding": [
+                    6,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "GVRLD",
+                      "name": "Calendar Icon",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "calendar",
+                      "library": "lucide",
+                      "fill": "$accent-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "z7Zci9",
+                      "name": "Day Text",
+                      "fill": "$accent-primary",
+                      "content": "Qui, 14 Ago",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SIGkW",
+              "name": "Next Class Hero",
+              "width": "fill_container",
+              "fill": "$surface-inverse",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NSZ7x",
+                  "name": "Next Label",
+                  "fill": "#FFFFFFAA",
+                  "content": "PRÓXIMA AULA",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "tUZXN",
+                  "name": "Hero Main",
+                  "width": "fill_container",
+                  "gap": 16,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Bru91",
+                      "name": "Time Block",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "XKQT5",
+                          "name": "Hero Start",
+                          "fill": "$foreground-inverse",
+                          "content": "08:00",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 36,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "i6MOK",
+                          "name": "Hero End",
+                          "fill": "#FFFFFFAA",
+                          "content": "até 09:30",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GVGto",
+                      "name": "Hero Details",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "E7u76",
+                          "name": "Hero Subject",
+                          "fill": "$foreground-inverse",
+                          "content": "Engenharia de Software",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "TBUUf",
+                          "name": "Hero Professor",
+                          "fill": "#FFFFFFCC",
+                          "content": "Prof. Ana Silva",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "L18PkJ",
+                  "name": "Hero Room",
+                  "fill": "#FFFFFF22",
+                  "cornerRadius": 12,
+                  "gap": 8,
+                  "padding": [
+                    10,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "WubNI",
+                      "name": "Hero Room Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "map-pin",
+                      "library": "lucide",
+                      "fill": "#FFFFFFCC"
+                    },
+                    {
+                      "type": "text",
+                      "id": "M2exT",
+                      "name": "Hero Room Text",
+                      "fill": "$foreground-inverse",
+                      "content": "Sala 302 · Bloco A",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "o8a7F6",
+                      "name": "Hero Room Code",
+                      "fill": "#FFFFFFAA",
+                      "content": "BL-A-302",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Y5oZV",
+              "name": "Section Header",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "z2TLgv",
+                  "name": "Section Title",
+                  "fill": "$foreground-primary",
+                  "content": "Todas as aulas",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "i7tley",
+                  "name": "Count Badge",
+                  "fill": "$accent-light",
+                  "cornerRadius": 9999,
+                  "padding": [
+                    4,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "uUeYz",
+                      "name": "Count",
+                      "fill": "$accent-primary",
+                      "content": "5 aulas",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RtPUn",
+              "name": "Class List",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "id": "jKxio",
+                  "type": "ref",
+                  "ref": "h7Mnp",
+                  "name": "Engenharia de Software",
+                  "width": "fill_container",
+                  "descendants": {
+                    "E7zMkm": {
+                      "content": "08:00"
+                    },
+                    "CClDC": {
+                      "content": "09:30"
+                    },
+                    "zUxJV": {
+                      "content": "Engenharia de Software"
+                    },
+                    "z8sEZ7": {
+                      "content": "Prof. Ana Silva"
+                    },
+                    "iC4JT": {
+                      "content": "Sala 302 · BL-A-302"
+                    }
+                  }
+                },
+                {
+                  "id": "L29cPm",
+                  "type": "ref",
+                  "ref": "h7Mnp",
+                  "name": "Banco de Dados II",
+                  "width": "fill_container",
+                  "descendants": {
+                    "E7zMkm": {
+                      "content": "10:00"
+                    },
+                    "CClDC": {
+                      "content": "11:30"
+                    },
+                    "zUxJV": {
+                      "content": "Banco de Dados II"
+                    },
+                    "z8sEZ7": {
+                      "content": "Prof. Carlos Melo"
+                    },
+                    "iC4JT": {
+                      "content": "Sala 415 · BL-B-415"
+                    }
+                  }
+                },
+                {
+                  "id": "xItT8",
+                  "type": "ref",
+                  "ref": "h7Mnp",
+                  "name": "Redes de Computadores",
+                  "width": "fill_container",
+                  "descendants": {
+                    "E7zMkm": {
+                      "content": "13:00"
+                    },
+                    "CClDC": {
+                      "content": "14:30"
+                    },
+                    "zUxJV": {
+                      "content": "Redes de Computadores"
+                    },
+                    "z8sEZ7": {
+                      "content": "Prof. Maria Santos"
+                    },
+                    "iC4JT": {
+                      "content": "Lab 201 · BL-C-201"
+                    }
+                  }
+                },
+                {
+                  "id": "NzeHQ",
+                  "type": "ref",
+                  "ref": "h7Mnp",
+                  "name": "Inteligência Artificial",
+                  "width": "fill_container",
+                  "descendants": {
+                    "E7zMkm": {
+                      "content": "15:00"
+                    },
+                    "CClDC": {
+                      "content": "16:30"
+                    },
+                    "zUxJV": {
+                      "content": "Inteligência Artificial"
+                    },
+                    "z8sEZ7": {
+                      "content": "Prof. João Lima"
+                    },
+                    "iC4JT": {
+                      "content": "Sala 108 · BL-A-108"
+                    }
+                  }
+                },
+                {
+                  "id": "L3ft8L",
+                  "type": "ref",
+                  "ref": "h7Mnp",
+                  "name": "Projeto Integrador",
+                  "width": "fill_container",
+                  "descendants": {
+                    "E7zMkm": {
+                      "content": "17:00"
+                    },
+                    "CClDC": {
+                      "content": "18:30"
+                    },
+                    "zUxJV": {
+                      "content": "Projeto Integrador"
+                    },
+                    "z8sEZ7": {
+                      "content": "Prof. Renata Costa"
+                    },
+                    "iC4JT": {
+                      "content": "Sala 510 · BL-D-510"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "eSJkC",
+          "type": "ref",
+          "ref": "ZfS01",
+          "name": "Tab Bar",
+          "width": "fill_container",
+          "descendants": {
+            "nRggO": {
+              "fill": "$accent-light",
+              "cornerRadius": 16
+            },
+            "hi0Cy": {
+              "fill": "$accent-primary"
+            },
+            "Y1z8b": {
+              "fill": "$accent-primary"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "surface-primary": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "surface-secondary": {
+      "type": "color",
+      "value": "#F7F8FA"
+    },
+    "surface-inverse": {
+      "type": "color",
+      "value": "#0062FF"
+    },
+    "foreground-primary": {
+      "type": "color",
+      "value": "#1A1A1A"
+    },
+    "foreground-secondary": {
+      "type": "color",
+      "value": "#4B5563"
+    },
+    "foreground-muted": {
+      "type": "color",
+      "value": "#9CA3AF"
+    },
+    "foreground-inverse": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "accent-primary": {
+      "type": "color",
+      "value": "#0062FF"
+    },
+    "accent-light": {
+      "type": "color",
+      "value": "#E8F0FE"
+    },
+    "warning": {
+      "type": "color",
+      "value": "#F59E0B"
+    },
+    "success": {
+      "type": "color",
+      "value": "#10B981"
+    }
+  },
+  "fileToken": "3834eab3-4dd6-4d76-8d75-a4e742e0b5d4"
+}

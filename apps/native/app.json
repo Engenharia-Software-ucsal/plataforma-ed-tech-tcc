@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "scheme": "busuucsal-v3",
+    "userInterfaceStyle": "automatic",
+    "orientation": "default",
+    "web": {
+      "bundler": "metro"
+    },
+    "name": "busuucsal-v3",
+    "slug": "busuucsal-v3",
+    "plugins": ["expo-font"],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
