@@ -24,6 +24,7 @@ function StackLayout() {
 				name="modal"
 				options={{ title: "Modal", presentation: "modal" }}
 			/>
+			<Stack.Screen name="aula-detalhes" options={{ headerShown: false }} />
 		</Stack>
 	);
 }
