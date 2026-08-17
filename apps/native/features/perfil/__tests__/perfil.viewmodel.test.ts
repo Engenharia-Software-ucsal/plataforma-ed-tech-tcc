@@ -2,25 +2,27 @@ import { act, renderHook } from "@testing-library/react-native";
 import { usePerfilViewModel } from "@/features/perfil/perfil.viewmodel";
 
 describe("usePerfilViewModel", () => {
-  it("exposes the user profile and a single connected account (Classroom)", async () => {
-    const { result } = await renderHook(() => usePerfilViewModel());
-    expect(result.current.profile.name).toBe("João Silva");
-    expect(result.current.accounts).toHaveLength(1);
-    expect(result.current.accounts[0].name).toBe("Google Classroom");
-    expect(result.current.accounts[0].connected).toBe(true);
-  });
+	it("exposes the user profile and a single connected account (Classroom)", async () => {
+		const { result } = await renderHook(() => usePerfilViewModel());
+		expect(result.current.profile.name).toBe("João Silva");
+		expect(result.current.accounts).toHaveLength(1);
+		expect(result.current.accounts[0].name).toBe("Google Classroom");
+		expect(result.current.accounts[0].connected).toBe(true);
+	});
 
-  it("toggles notifications", async () => {
-    const { result } = await renderHook(() => usePerfilViewModel());
-    expect(result.current.notificationsEnabled).toBe(true);
-    await act(async () => result.current.toggleNotifications());
-    expect(result.current.notificationsEnabled).toBe(false);
-  });
+	it("toggles notifications", async () => {
+		const { result } = await renderHook(() => usePerfilViewModel());
+		expect(result.current.notificationsEnabled).toBe(true);
+		await act(async () => result.current.toggleNotifications());
+		expect(result.current.notificationsEnabled).toBe(false);
+	});
 
-  it("calls the injected sign-out callback", async () => {
-    const onSignOut = jest.fn();
-    const { result } = await renderHook(() => usePerfilViewModel({ onSignOut }));
-    await act(async () => result.current.signOut());
-    expect(onSignOut).toHaveBeenCalledTimes(1);
-  });
+	it("calls the injected sign-out callback", async () => {
+		const onSignOut = jest.fn();
+		const { result } = await renderHook(() =>
+			usePerfilViewModel({ onSignOut }),
+		);
+		await act(async () => result.current.signOut());
+		expect(onSignOut).toHaveBeenCalledTimes(1);
+	});
 });

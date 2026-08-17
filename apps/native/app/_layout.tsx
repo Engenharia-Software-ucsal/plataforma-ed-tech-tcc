@@ -9,37 +9,43 @@ import { AppThemeProvider } from "@/contexts/app-theme-context";
 import { useAppFontsLoaded } from "@/hooks/use-fonts";
 
 export const unstable_settings = {
-  initialRouteName: "(drawer)",
+	initialRouteName: "(drawer)",
 };
 
 function StackLayout() {
-  return (
-    <Stack screenOptions={{}}>
-      <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false, presentation: "fullScreenModal" }} />
-      <Stack.Screen name="modal" options={{ title: "Modal", presentation: "modal" }} />
-    </Stack>
-  );
+	return (
+		<Stack screenOptions={{}}>
+			<Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+			<Stack.Screen
+				name="login"
+				options={{ headerShown: false, presentation: "fullScreenModal" }}
+			/>
+			<Stack.Screen
+				name="modal"
+				options={{ title: "Modal", presentation: "modal" }}
+			/>
+		</Stack>
+	);
 }
 
 export default function Layout() {
-  const fontsLoaded = useAppFontsLoaded();
+	const fontsLoaded = useAppFontsLoaded();
 
-  if (!fontsLoaded) {
-    return null;
-  }
+	if (!fontsLoaded) {
+		return null;
+	}
 
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <KeyboardProvider>
-        <JotaiProvider>
-          <AppThemeProvider>
-            <HeroUINativeProvider>
-              <StackLayout />
-            </HeroUINativeProvider>
-          </AppThemeProvider>
-        </JotaiProvider>
-      </KeyboardProvider>
-    </GestureHandlerRootView>
-  );
+	return (
+		<GestureHandlerRootView style={{ flex: 1 }}>
+			<KeyboardProvider>
+				<JotaiProvider>
+					<AppThemeProvider>
+						<HeroUINativeProvider>
+							<StackLayout />
+						</HeroUINativeProvider>
+					</AppThemeProvider>
+				</JotaiProvider>
+			</KeyboardProvider>
+		</GestureHandlerRootView>
+	);
 }
