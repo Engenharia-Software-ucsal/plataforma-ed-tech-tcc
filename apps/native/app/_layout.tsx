@@ -9,25 +9,23 @@ import { AppThemeProvider } from "@/contexts/app-theme-context";
 import { useAppFontsLoaded } from "@/hooks/use-fonts";
 
 export const unstable_settings = {
-	initialRouteName: "(drawer)",
+	initialRouteName: "login",
 };
 
 function StackLayout() {
 	return (
-		<Stack screenOptions={{}}>
-			<Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-			<Stack.Screen
-				name="login"
-				options={{ headerShown: false, presentation: "fullScreenModal" }}
-			/>
+		<Stack screenOptions={{ headerShown: false }}>
+			<Stack.Screen name="login" />
+			<Stack.Screen name="(tabs)" />
+			<Stack.Screen name="perfil" />
+			<Stack.Screen name="aula-detalhes" />
+			<Stack.Screen name="quiz" />
+			<Stack.Screen name="quiz-resultado" />
+			<Stack.Screen name="notificacoes" />
 			<Stack.Screen
 				name="modal"
-				options={{ title: "Modal", presentation: "modal" }}
+				options={{ headerShown: true, title: "Modal", presentation: "modal" }}
 			/>
-			<Stack.Screen name="aula-detalhes" options={{ headerShown: false }} />
-			<Stack.Screen name="quiz" options={{ headerShown: false }} />
-			<Stack.Screen name="quiz-resultado" options={{ headerShown: false }} />
-			<Stack.Screen name="notificacoes" options={{ headerShown: false }} />
 		</Stack>
 	);
 }

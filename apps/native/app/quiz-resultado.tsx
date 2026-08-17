@@ -1,5 +1,12 @@
+import { useRouter } from "expo-router";
 import { QuizResultadoScreen } from "@/features/quiz-resultado/QuizResultadoScreen";
 
 export default function QuizResultado() {
-	return <QuizResultadoScreen />;
+	const router = useRouter();
+	return (
+		<QuizResultadoScreen
+			onRetry={() => router.replace("/quiz")}
+			onBack={() => router.replace("/(tabs)/aulas")}
+		/>
+	);
 }

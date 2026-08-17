@@ -1,5 +1,12 @@
+import { useRouter } from "expo-router";
 import { LoginScreen } from "@/features/login/LoginScreen";
 
 export default function Login() {
-	return <LoginScreen />;
+	const router = useRouter();
+
+	async function authenticate() {
+		router.replace("/(tabs)/onibus");
+	}
+
+	return <LoginScreen authenticate={authenticate} />;
 }

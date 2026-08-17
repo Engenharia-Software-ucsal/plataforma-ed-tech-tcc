@@ -1,5 +1,6 @@
-import { Bell, GraduationCap, LogOut } from "lucide-react-native";
-import { View } from "react-native";
+import { useRouter } from "expo-router";
+import { Bell, ChevronLeft, GraduationCap, LogOut } from "lucide-react-native";
+import { Pressable, View } from "react-native";
 import { AppButton } from "@/components/atoms/AppButton";
 import { AppText } from "@/components/atoms/AppText";
 import { IconBadge } from "@/components/atoms/IconBadge";
@@ -7,6 +8,7 @@ import { Container } from "@/components/container";
 import { usePerfilViewModel } from "@/features/perfil/perfil.viewmodel";
 
 export function PerfilScreen({ onSignOut }: { onSignOut?: () => void } = {}) {
+	const router = useRouter();
 	const {
 		profile,
 		accounts,
@@ -18,13 +20,22 @@ export function PerfilScreen({ onSignOut }: { onSignOut?: () => void } = {}) {
 	return (
 		<Container className="bg-surface-primary">
 			<View className="gap-6 p-5">
-				<AppText
-					variant="heading"
-					tone="primary"
-					className="font-bold text-[28px]"
-				>
-					Perfil
-				</AppText>
+				<View className="flex-row items-center gap-3">
+					<Pressable
+						testID="back-button"
+						onPress={() => router.back()}
+						className="h-9 w-9 items-center justify-center rounded-lg-card border border-border-subtle bg-surface-secondary"
+					>
+						<ChevronLeft size={18} color="#FFFFFF" />
+					</Pressable>
+					<AppText
+						variant="heading"
+						tone="primary"
+						className="font-bold text-[28px]"
+					>
+						Perfil
+					</AppText>
+				</View>
 
 				<View className="flex-row items-center gap-3.5 rounded-lg-card border border-border-subtle bg-surface-secondary p-4">
 					<IconBadge

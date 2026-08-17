@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import {
 	ChevronLeft,
 	Gauge,
@@ -6,7 +7,7 @@ import {
 	Sparkles,
 	TriangleAlert,
 } from "lucide-react-native";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { AppText } from "@/components/atoms/AppText";
 import { Container } from "@/components/container";
 import { NotificationRow } from "@/components/molecules/NotificationRow";
@@ -37,13 +38,18 @@ function iconFor(name: NotificationIconName, color: string) {
 }
 
 export function NotificacoesScreen() {
+	const router = useRouter();
 	return (
 		<Container className="bg-surface-primary">
 			<View className="gap-5 p-5">
 				<View className="flex-row items-center gap-3">
-					<View className="h-9 w-9 items-center justify-center rounded-lg-card border border-border-subtle bg-surface-secondary">
+					<Pressable
+						testID="back-button"
+						onPress={() => router.back()}
+						className="h-9 w-9 items-center justify-center rounded-lg-card border border-border-subtle bg-surface-secondary"
+					>
 						<ChevronLeft size={18} color="#FFFFFF" />
-					</View>
+					</Pressable>
 					<AppText
 						variant="heading"
 						tone="primary"

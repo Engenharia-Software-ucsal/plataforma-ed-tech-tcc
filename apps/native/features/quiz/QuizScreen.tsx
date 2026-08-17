@@ -1,5 +1,6 @@
+import { useRouter } from "expo-router";
 import { ArrowRight, X } from "lucide-react-native";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { AppButton } from "@/components/atoms/AppButton";
 import { AppText } from "@/components/atoms/AppText";
 import { Chip } from "@/components/atoms/Chip";
@@ -8,18 +9,38 @@ import { QuizOptionRow } from "@/components/molecules/QuizOptionRow";
 import { useQuizViewModel } from "@/features/quiz/quiz.viewmodel";
 
 export function QuizScreen() {
-	const { question, index, total, selectedOptionId, selectOption, goNext } =
-		useQuizViewModel();
+	const router = useRouter();
+	const {
+		question,
+		index,
+		total,
+		isLast,
+		selectedOptionId,
+		selectOption,
+		goNext,
+	} = useQuizViewModel();
 	const progressPercent = ((index + 1) / total) * 100;
+
+	function handleNext() {
+		if (isLast) {
+			router.replace("/quiz-resultado");
+			return;
+		}
+		goNext();
+	}
 
 	return (
 		<Container className="bg-surface-primary">
 			<View className="gap-5 p-5">
 				<View className="flex-row items-center justify-between">
 					<View className="flex-row items-center gap-3">
-						<View className="h-9 w-9 items-center justify-center rounded-lg-card border border-border-subtle bg-surface-secondary">
+						<Pressable
+							testID="close-button"
+							onPress={() => router.back()}
+							className="h-9 w-9 items-center justify-center rounded-lg-card border border-border-subtle bg-surface-secondary"
+						>
 							<X size={16} color="#FFFFFF" />
-						</View>
+						</Pressable>
 						<AppText
 							variant="heading"
 							tone="primary"
@@ -63,8 +84,8 @@ export function QuizScreen() {
 				</View>
 
 				<AppButton
-					label="Próxima pergunta"
-					onPress={goNext}
+					label={isLast ? "Ver resultado" : "Próxima pergunta"}
+					onPress={handleNext}
 					icon={<ArrowRight size={16} color="#FFFFFF" />}
 					disabled={!selectedOptionId}
 				/>

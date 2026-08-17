@@ -17,10 +17,13 @@ export function useQuizViewModel() {
 		setSelectedOptionId(null);
 	}, []);
 
+	const isLast = index === total - 1;
+
 	return {
 		question,
 		index,
 		total,
+		isLast,
 		selectedOptionId,
 		selectOption,
 		goNext,

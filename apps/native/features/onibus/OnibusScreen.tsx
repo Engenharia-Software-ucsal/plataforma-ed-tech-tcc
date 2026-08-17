@@ -1,5 +1,6 @@
-import { Bell } from "lucide-react-native";
-import { View } from "react-native";
+import { useRouter } from "expo-router";
+import { Bell, User } from "lucide-react-native";
+import { Pressable, View } from "react-native";
 import { AppText } from "@/components/atoms/AppText";
 import { Container } from "@/components/container";
 import { SegmentedFilter } from "@/components/molecules/SegmentedFilter";
@@ -11,11 +12,12 @@ import type { BusStopFilter } from "@/state/busStopFilter";
 const FILTER_OPTIONS: readonly BusStopFilter[] = ["Todos", "UCSAL", "Pituaçu"];
 
 export function OnibusScreen() {
+	const router = useRouter();
 	const { next, filtered, filter, setFilter, isFavorite, toggleFavorite } =
 		useOnibusViewModel();
 
 	return (
-		<Container className="bg-surface-primary">
+		<Container className="bg-surface-primary" isScrollable>
 			<View className="gap-6 p-5">
 				<View className="flex-row items-center justify-between">
 					<AppText
@@ -25,7 +27,20 @@ export function OnibusScreen() {
 					>
 						Ônibus
 					</AppText>
-					<Bell size={24} color="#A1A1AA" />
+					<View className="flex-row items-center gap-4">
+						<Pressable
+							testID="bell-button"
+							onPress={() => router.push("/notificacoes")}
+						>
+							<Bell size={24} color="#A1A1AA" />
+						</Pressable>
+						<Pressable
+							testID="profile-button"
+							onPress={() => router.push("/perfil")}
+						>
+							<User size={24} color="#A1A1AA" />
+						</Pressable>
+					</View>
 				</View>
 
 				<NextBusHero departure={next} />

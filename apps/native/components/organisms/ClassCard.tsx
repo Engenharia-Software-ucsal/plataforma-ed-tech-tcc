@@ -1,12 +1,20 @@
 import { MapPin } from "lucide-react-native";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { AppText } from "@/components/atoms/AppText";
 import { DifficultyTag } from "@/components/molecules/DifficultyTag";
 import type { ClassSession } from "@/features/aulas/aulas.model";
 
-export function ClassCard({ session }: { session: ClassSession }) {
+export type ClassCardProps = {
+	session: ClassSession;
+	onPress?: () => void;
+};
+
+export function ClassCard({ session, onPress }: ClassCardProps) {
 	return (
-		<View className="flex-row items-center gap-3 rounded-lg-card border border-border-subtle bg-surface-secondary p-4">
+		<Pressable
+			onPress={onPress}
+			className="flex-row items-center gap-3 rounded-lg-card border border-border-subtle bg-surface-secondary p-4"
+		>
 			<View className="items-center gap-0.5">
 				<AppText variant="mono" tone="accent" className="font-bold text-base">
 					{session.startTime}
@@ -35,6 +43,6 @@ export function ClassCard({ session }: { session: ClassSession }) {
 				</View>
 				<DifficultyTag {...session.difficulty} />
 			</View>
-		</View>
+		</Pressable>
 	);
 }

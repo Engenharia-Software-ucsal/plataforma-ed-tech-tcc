@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import {
 	ChevronLeft,
 	Clock3,
@@ -6,7 +7,7 @@ import {
 	MapPin,
 	User,
 } from "lucide-react-native";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { AppButton } from "@/components/atoms/AppButton";
 import { AppText } from "@/components/atoms/AppText";
 import { Chip } from "@/components/atoms/Chip";
@@ -24,15 +25,20 @@ const FILE_ICON: Record<string, React.ReactNode> = {
 };
 
 export function AulaDetalhesScreen() {
+	const router = useRouter();
 	const { data, activeTab, setActiveTab } = useAulaDetalhesViewModel();
 
 	return (
 		<Container className="bg-surface-primary">
 			<View className="gap-6 p-5">
 				<View className="flex-row items-center gap-3">
-					<View className="h-9 w-9 items-center justify-center rounded-lg-card border border-border-subtle bg-surface-secondary">
+					<Pressable
+						testID="back-button"
+						onPress={() => router.back()}
+						className="h-9 w-9 items-center justify-center rounded-lg-card border border-border-subtle bg-surface-secondary"
+					>
 						<ChevronLeft size={18} color="#FFFFFF" />
-					</View>
+					</Pressable>
 					<AppText
 						variant="heading"
 						tone="primary"
@@ -129,7 +135,7 @@ export function AulaDetalhesScreen() {
 						summary={data.insightSummary}
 						coverageText={data.insightCoverage}
 						points={data.insightPoints}
-						onGenerateQuiz={() => {}}
+						onGenerateQuiz={() => router.push("/quiz")}
 					/>
 				)}
 			</View>

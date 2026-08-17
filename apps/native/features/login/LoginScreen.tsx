@@ -22,7 +22,7 @@ export function LoginScreen({
 			<IconBadge
 				icon={<Compass size={32} color="#FFFFFF" />}
 				tone="accent"
-				className="h-[72px] w-[72px] rounded-lg-card bg-accent-primary"
+				className="h-18 w-18 rounded-lg-card bg-accent-primary"
 			/>
 
 			<View className="items-center gap-2">

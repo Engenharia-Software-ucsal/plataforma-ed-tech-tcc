@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { View } from "react-native";
 import { AppText } from "@/components/atoms/AppText";
 import { Container } from "@/components/container";
@@ -6,6 +7,7 @@ import { NextClassHero } from "@/components/organisms/NextClassHero";
 import { useAulasViewModel } from "@/features/aulas/aulas.viewmodel";
 
 export function AulasScreen() {
+	const router = useRouter();
 	const { next, sessions } = useAulasViewModel();
 
 	return (
@@ -31,7 +33,11 @@ export function AulasScreen() {
 					</AppText>
 					<View className="gap-2.5">
 						{sessions.map((session) => (
-							<ClassCard key={session.id} session={session} />
+							<ClassCard
+								key={session.id}
+								session={session}
+								onPress={() => router.push("/aula-detalhes")}
+							/>
 						))}
 					</View>
 				</View>
