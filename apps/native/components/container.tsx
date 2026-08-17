@@ -36,7 +36,12 @@ export function Container({
 		>
 			{isScrollable ? (
 				<ScrollView
-					contentContainerStyle={{ flexGrow: 1 }}
+					contentContainerStyle={{
+						flexGrow: 1,
+						paddingTop: 20,
+						paddingLeft: 2,
+						paddingRight: 2,
+					}}
 					keyboardShouldPersistTaps="handled"
 					contentInsetAdjustmentBehavior="automatic"
 					{...scrollViewProps}
