@@ -26,6 +26,7 @@ function StackLayout() {
 			/>
 			<Stack.Screen name="aula-detalhes" options={{ headerShown: false }} />
 			<Stack.Screen name="quiz" options={{ headerShown: false }} />
+			<Stack.Screen name="quiz-resultado" options={{ headerShown: false }} />
 		</Stack>
 	);
 }
