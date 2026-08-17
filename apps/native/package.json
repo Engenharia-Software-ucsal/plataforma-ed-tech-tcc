@@ -15,6 +15,13 @@
   },
   "jest": {
     "preset": "jest-expo",
+    "moduleNameMapper": {
+      "^react-native-reanimated$": "<rootDir>/__mocks__/react-native-reanimated.js",
+      "^react-native-worklets$": "<rootDir>/__mocks__/react-native-worklets.js"
+    },
+    "setupFilesAfterEnv": [
+      "./jest.setup.ts"
+    ],
     "transformIgnorePatterns": [
       "node_modules/(?!(.pnpm|(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|uniwind|heroui-native))"
     ]

@@ -15,7 +15,7 @@ describe("useOnibusViewModel", () => {
 
   it("filters departures by stop when the filter changes", async () => {
     const { result } = await renderHook(() => useOnibusViewModel(), { wrapper });
-    act(() => result.current.setFilter("UCSAL"));
+    await act(async () => result.current.setFilter("UCSAL"));
     expect(result.current.filtered.every((d) => d.stop === "UCSAL")).toBe(true);
   });
 
@@ -23,9 +23,9 @@ describe("useOnibusViewModel", () => {
     const { result } = await renderHook(() => useOnibusViewModel(), { wrapper });
     const id = result.current.filtered[0].id;
     expect(result.current.isFavorite(id)).toBe(false);
-    act(() => result.current.toggleFavorite(id));
+    await act(async () => result.current.toggleFavorite(id));
     expect(result.current.isFavorite(id)).toBe(true);
-    act(() => result.current.toggleFavorite(id));
+    await act(async () => result.current.toggleFavorite(id));
     expect(result.current.isFavorite(id)).toBe(false);
   });
 
