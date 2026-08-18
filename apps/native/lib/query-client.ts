@@ -6,8 +6,6 @@ import {
 } from "@tanstack/react-query";
 import type { AppStateStatus } from "react-native";
 
-// RN has no window focus/online events — wire TanStack Query's managers to
-// AppState and NetInfo instead. See: https://tanstack.com/query/latest/docs/framework/react/react-native
 onlineManager.setEventListener((setOnline) => {
 	return NetInfo.addEventListener((state) => {
 		setOnline(!!state.isConnected);
