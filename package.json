@@ -11,6 +11,7 @@
     "build": "turbo run build",
     "check-types": "turbo run check-types",
     "dev:native": "turbo run dev -F native --",
+    "dev:server": "turbo run dev -F server --",
     "check": "biome check --write ."
   },
   "dependencies": {
