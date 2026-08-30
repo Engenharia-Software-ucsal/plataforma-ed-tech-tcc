@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { env } from "@busuucsal-v3/env/server";
+import cors from "@fastify/cors";
 import {
 	type FastifyTRPCPluginOptions,
 	fastifyTRPCPlugin,
@@ -8,29 +9,36 @@ import Fastify from "fastify";
 import { createContext } from "./trpc/context.js";
 import { type AppRouter, appRouter } from "./trpc/router.js";
 
-const server = Fastify({
-	logger: true,
-	routerOptions: {
-		maxParamLength: 5000,
-	},
-});
-
-server.register(fastifyTRPCPlugin, {
-	prefix: "/trpc",
-	trpcOptions: {
-		router: appRouter,
-		createContext,
-		onError({ path, error }) {
-			console.error(`Error in tRPC handler on path '${path}':`, error);
+export async function buildServer() {
+	const server = Fastify({
+		logger: true,
+		routerOptions: {
+			maxParamLength: 5000,
 		},
-	} satisfies FastifyTRPCPluginOptions<AppRouter>["trpcOptions"],
-});
+	});
 
-server.get("/", async () => {
-	return { status: "ok", environment: env.NODE_ENV };
-});
+	await server.register(cors, { origin: true });
+
+	await server.register(fastifyTRPCPlugin, {
+		prefix: "/trpc",
+		trpcOptions: {
+			router: appRouter,
+			createContext,
+			onError({ path, error }) {
+				console.error(`Error in tRPC handler on path '${path}':`, error);
+			},
+		} satisfies FastifyTRPCPluginOptions<AppRouter>["trpcOptions"],
+	});
+
+	server.get("/", async () => {
+		return { status: "ok", environment: env.NODE_ENV };
+	});
+
+	return server;
+}
 
 const start = async () => {
+	const server = await buildServer();
 	try {
 		await server.listen({ port: env.PORT, host: "0.0.0.0" });
 	} catch (err) {
@@ -39,4 +47,6 @@ const start = async () => {
 	}
 };
 
-start();
+if (process.env.NODE_ENV !== "test") {
+	start();
+}
