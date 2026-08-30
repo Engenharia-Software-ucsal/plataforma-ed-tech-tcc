@@ -7,17 +7,23 @@
 		"dev": "tsx watch src/index.ts",
 		"build": "tsc",
 		"start": "node dist/index.js",
-		"check-types": "tsc --noEmit"
+		"check-types": "tsc --noEmit",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:push": "drizzle-kit push",
+		"db:studio": "drizzle-kit studio"
 	},
 	"dependencies": {
 		"@busuucsal-v3/config": "workspace:*",
 		"@busuucsal-v3/env": "workspace:*",
 		"dotenv": "catalog:",
+		"drizzle-orm": "^0.44.2",
 		"fastify": "^5.3.3",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@types/node": "^22.20.1",
+		"drizzle-kit": "^0.31.5",
 		"tsx": "^4.19.4",
 		"typescript": "^6.0.3"
 	}
