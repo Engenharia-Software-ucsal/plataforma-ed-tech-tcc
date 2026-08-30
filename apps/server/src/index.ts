@@ -1,8 +1,30 @@
 import "dotenv/config";
-import Fastify from "fastify";
 import { env } from "@busuucsal-v3/env/server";
+import {
+	type FastifyTRPCPluginOptions,
+	fastifyTRPCPlugin,
+} from "@trpc/server/adapters/fastify";
+import Fastify from "fastify";
+import { createContext } from "./trpc/context.js";
+import { type AppRouter, appRouter } from "./trpc/router.js";
 
-const server = Fastify({ logger: true });
+const server = Fastify({
+	logger: true,
+	routerOptions: {
+		maxParamLength: 5000,
+	},
+});
+
+server.register(fastifyTRPCPlugin, {
+	prefix: "/trpc",
+	trpcOptions: {
+		router: appRouter,
+		createContext,
+		onError({ path, error }) {
+			console.error(`Error in tRPC handler on path '${path}':`, error);
+		},
+	} satisfies FastifyTRPCPluginOptions<AppRouter>["trpcOptions"],
+});
 
 server.get("/", async () => {
 	return { status: "ok", environment: env.NODE_ENV };
