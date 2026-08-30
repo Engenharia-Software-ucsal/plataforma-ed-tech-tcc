@@ -1,10 +1,19 @@
-import { describe, expect, it } from "vitest";
+import type { FastifyInstance } from "fastify";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildServer } from "../src/index.js";
 
 describe("Health check", () => {
-	it("GET / returns status ok", async () => {
-		const server = await buildServer();
+	let server: FastifyInstance;
 
+	beforeAll(async () => {
+		server = await buildServer();
+	});
+
+	afterAll(async () => {
+		await server.close();
+	});
+
+	it("GET / returns status ok", async () => {
 		const response = await server.inject({
 			method: "GET",
 			url: "/",
@@ -12,13 +21,9 @@ describe("Health check", () => {
 
 		expect(response.statusCode).toBe(200);
 		expect(response.json()).toEqual(expect.objectContaining({ status: "ok" }));
-
-		await server.close();
 	});
 
 	it("GET /trpc/health.check returns healthy", async () => {
-		const server = await buildServer();
-
 		const response = await server.inject({
 			method: "GET",
 			url: "/trpc/health.check",
@@ -28,7 +33,5 @@ describe("Health check", () => {
 		const body = response.json();
 		expect(body.result.data.status).toBe("healthy");
 		expect(body.result.data.timestamp).toBeDefined();
-
-		await server.close();
 	});
 });

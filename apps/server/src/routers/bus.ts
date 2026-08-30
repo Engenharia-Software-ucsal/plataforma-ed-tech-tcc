@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { busDepartures } from "../db/schema/index.js";
@@ -16,7 +17,10 @@ export const busRouter = router({
 				.from(busDepartures)
 				.where(eq(busDepartures.id, input.id));
 			if (!departure) {
-				throw new Error("Bus departure not found");
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "Bus departure not found",
+				});
 			}
 			return departure;
 		}),

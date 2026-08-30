@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { classSessions } from "../db/schema/index.js";
@@ -16,7 +17,10 @@ export const classRouter = router({
 				.from(classSessions)
 				.where(eq(classSessions.id, input.id));
 			if (!session) {
-				throw new Error("Class session not found");
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "Class session not found",
+				});
 			}
 			return session;
 		}),

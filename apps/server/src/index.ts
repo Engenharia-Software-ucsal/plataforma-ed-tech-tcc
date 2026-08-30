@@ -6,6 +6,7 @@ import {
 	fastifyTRPCPlugin,
 } from "@trpc/server/adapters/fastify";
 import Fastify from "fastify";
+import { pool } from "./db/index.js";
 import { createContext } from "./trpc/context.js";
 import { type AppRouter, appRouter } from "./trpc/router.js";
 
@@ -32,6 +33,10 @@ export async function buildServer() {
 
 	server.get("/", async () => {
 		return { status: "ok", environment: env.NODE_ENV };
+	});
+
+	server.addHook("onClose", async () => {
+		await pool.end();
 	});
 
 	return server;
