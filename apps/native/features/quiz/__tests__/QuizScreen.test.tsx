@@ -1,8 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { Provider } from "jotai";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QuizScreen } from "@/features/quiz/QuizScreen";
-
-import { Provider } from "jotai";
 
 function renderScreen() {
 	return render(

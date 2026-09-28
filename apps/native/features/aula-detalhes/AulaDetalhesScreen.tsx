@@ -1,5 +1,12 @@
 import { useRouter } from "expo-router";
-import { ChevronLeft, Clock3, Download, GraduationCap, MapPin, User } from "lucide-react-native";
+import {
+	ChevronLeft,
+	Clock3,
+	Download,
+	GraduationCap,
+	MapPin,
+	User,
+} from "lucide-react-native";
 import { Pressable, View } from "react-native";
 import { AppButton } from "@/components/atoms/AppButton";
 import { AppText } from "@/components/atoms/AppText";
@@ -32,13 +39,21 @@ export function AulaDetalhesScreen() {
 					>
 						<ChevronLeft size={18} color="#FFFFFF" />
 					</Pressable>
-					<AppText variant="heading" tone="primary" className="font-bold text-lg">
+					<AppText
+						variant="heading"
+						tone="primary"
+						className="font-bold text-lg"
+					>
 						Detalhes da Aula
 					</AppText>
 				</View>
 
 				<View className="gap-2">
-					<AppText variant="heading" tone="primary" className="font-bold text-[22px]">
+					<AppText
+						variant="heading"
+						tone="primary"
+						className="font-bold text-[22px]"
+					>
 						{data.subject}
 					</AppText>
 					<View className="flex-row flex-wrap items-center gap-3">

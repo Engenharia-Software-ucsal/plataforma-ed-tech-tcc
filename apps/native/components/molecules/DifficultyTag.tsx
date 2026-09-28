@@ -27,7 +27,11 @@ export type DifficultyTagProps = {
 	reviewCount: number;
 };
 
-export function DifficultyTag({ level, score, reviewCount }: DifficultyTagProps) {
+export function DifficultyTag({
+	level,
+	score,
+	reviewCount,
+}: DifficultyTagProps) {
 	const Icon = level === "dificil" ? Flame : Gauge;
 	return (
 		<Chip

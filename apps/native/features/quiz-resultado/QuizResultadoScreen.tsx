@@ -22,10 +22,18 @@ export function QuizResultadoScreen({
 				<ScoreRing correct={correct} total={total} />
 
 				<View className="items-center gap-2">
-					<AppText variant="heading" tone="primary" className="font-bold text-[22px]">
+					<AppText
+						variant="heading"
+						tone="primary"
+						className="font-bold text-[22px]"
+					>
 						{title}
 					</AppText>
-					<AppText variant="body" tone="muted" className="text-center text-[13px]">
+					<AppText
+						variant="body"
+						tone="muted"
+						className="text-center text-[13px]"
+					>
 						{subtitle}
 					</AppText>
 				</View>

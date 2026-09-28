@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { users } from "../src/db/schema/users.js";
+import { describe, expect, it } from "vitest";
 import { sessions } from "../src/db/schema/sessions.js";
+import { users } from "../src/db/schema/users.js";
 
 describe("Auth Database Schema", () => {
 	it("should have googleId and googleRefreshToken in users", () => {

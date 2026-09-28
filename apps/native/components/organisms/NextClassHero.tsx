@@ -23,7 +23,11 @@ export function NextClassHero({ session }: { session: ClassSession }) {
 				>
 					Próxima aula
 				</AppText>
-				<AppText variant="body" tone="primary" className="font-semibold text-[15px]">
+				<AppText
+					variant="body"
+					tone="primary"
+					className="font-semibold text-[15px]"
+				>
 					{session.subject}
 				</AppText>
 				<View className="flex-row items-center gap-1.5">

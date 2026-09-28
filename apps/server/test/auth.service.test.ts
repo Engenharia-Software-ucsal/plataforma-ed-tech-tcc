@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { authenticateWithGoogle } from "../src/services/auth.service.js";
 
-// @ts-ignore
+// @ts-expect-error
 globalThis.__mockGetPayload = vi.fn();
 
 vi.mock("google-auth-library", () => {
@@ -39,7 +39,7 @@ vi.mock("../src/db/index.js", () => {
 
 describe("authenticateWithGoogle domain restrictions", () => {
 	it("should throw UNAUTHORIZED_DOMAIN if email does not end with @ucsal.edu.br", async () => {
-		// @ts-ignore
+		// @ts-expect-error
 		globalThis.__mockGetPayload.mockReturnValue({
 			email: "student@gmail.com",
 			sub: "12345",
@@ -47,11 +47,13 @@ describe("authenticateWithGoogle domain restrictions", () => {
 			picture: "pic.jpg",
 		});
 
-		await expect(authenticateWithGoogle("auth_code")).rejects.toThrow("UNAUTHORIZED_DOMAIN");
+		await expect(authenticateWithGoogle("auth_code")).rejects.toThrow(
+			"UNAUTHORIZED_DOMAIN",
+		);
 	});
 
 	it("should proceed if email ends with @ucsal.edu.br", async () => {
-		// @ts-ignore
+		// @ts-expect-error
 		globalThis.__mockGetPayload.mockReturnValue({
 			email: "student@ucsal.edu.br",
 			sub: "12345",

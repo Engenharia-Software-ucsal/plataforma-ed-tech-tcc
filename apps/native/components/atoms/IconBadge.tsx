@@ -14,7 +14,13 @@ export type IconBadgeProps = ViewProps & {
 	testID?: string;
 };
 
-export function IconBadge({ icon, tone = "muted", testID, className, ...props }: IconBadgeProps) {
+export function IconBadge({
+	icon,
+	tone = "muted",
+	testID,
+	className,
+	...props
+}: IconBadgeProps) {
 	return (
 		<View
 			testID={testID}

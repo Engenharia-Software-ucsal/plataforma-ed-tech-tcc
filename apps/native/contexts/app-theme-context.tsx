@@ -13,9 +13,15 @@ type AppThemeContextType = {
 	toggleTheme: () => void;
 };
 
-const AppThemeContext = createContext<AppThemeContextType | undefined>(undefined);
+const AppThemeContext = createContext<AppThemeContextType | undefined>(
+	undefined,
+);
 
-export const AppThemeProvider = ({ children }: { children: React.ReactNode }) => {
+export const AppThemeProvider = ({
+	children,
+}: {
+	children: React.ReactNode;
+}) => {
 	const { theme } = useUniwind();
 
 	const isLight = useMemo(() => {
@@ -45,7 +51,11 @@ export const AppThemeProvider = ({ children }: { children: React.ReactNode }) =>
 		[theme, isLight, isDark, setTheme, toggleTheme],
 	);
 
-	return <AppThemeContext.Provider value={value}>{children}</AppThemeContext.Provider>;
+	return (
+		<AppThemeContext.Provider value={value}>
+			{children}
+		</AppThemeContext.Provider>
+	);
 };
 
 export function useAppTheme() {

@@ -2,7 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { InsightCard } from "@/components/organisms/InsightCard";
 
 const props = {
-	summary: "IA analisou os slides e a gravação enviados pelo professor no Classroom.",
+	summary:
+		"IA analisou os slides e a gravação enviados pelo professor no Classroom.",
 	coverageText: "Baseado em 2 de 4 materiais analisados",
 	points: [
 		"Princípios SOLID aplicados a microsserviços",

@@ -38,8 +38,9 @@ export default function Layout() {
 	const fontsLoaded = useAppFontsLoaded();
 
 	useEffect(() => {
-		const subscription = AppState.addEventListener("change", (status: AppStateStatus) =>
-			onAppStateChange(status),
+		const subscription = AppState.addEventListener(
+			"change",
+			(status: AppStateStatus) => onAppStateChange(status),
 		);
 		return () => subscription.remove();
 	}, []);

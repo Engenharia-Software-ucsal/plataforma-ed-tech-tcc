@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { publicProcedure, router } from "../trpc/index.js";
-import { authenticateWithGoogle } from "../services/auth.service.js";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { authenticateWithGoogle } from "../services/auth.service.js";
+import { publicProcedure, router } from "../trpc/index.js";
 
 export const authRouter = router({
 	loginWithGoogle: publicProcedure

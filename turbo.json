@@ -11,8 +11,8 @@
 			"dependsOn": ["build"],
 			"outputs": ["coverage/**"]
 		},
-		"lint": {
-			"dependsOn": ["^lint"]
+		"check": {
+			"dependsOn": ["^check"]
 		},
 		"check-types": {
 			"dependsOn": ["^check-types"]

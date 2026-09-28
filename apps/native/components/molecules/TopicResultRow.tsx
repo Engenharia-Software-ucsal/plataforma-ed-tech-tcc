@@ -2,7 +2,13 @@ import { CircleCheckBig, CircleX } from "lucide-react-native";
 import { View } from "react-native";
 import { AppText } from "@/components/atoms/AppText";
 
-export function TopicResultRow({ label, correct }: { label: string; correct: boolean }) {
+export function TopicResultRow({
+	label,
+	correct,
+}: {
+	label: string;
+	correct: boolean;
+}) {
 	return (
 		<View className="flex-row items-center gap-2">
 			{correct ? (

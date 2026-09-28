@@ -1,9 +1,9 @@
-import { OAuth2Client } from "google-auth-library";
-import { db } from "../db/index.js";
-import { users, sessions } from "../db/schema/index.js";
-import { eq } from "drizzle-orm";
 import crypto from "node:crypto";
 import { env } from "@busuucsal-v3/env/server";
+import { eq } from "drizzle-orm";
+import { OAuth2Client } from "google-auth-library";
+import { db } from "../db/index.js";
+import { sessions, users } from "../db/schema/index.js";
 
 const client = new OAuth2Client(
 	env.GOOGLE_SERVER_CLIENT_ID,
@@ -23,7 +23,9 @@ export async function authenticateWithGoogle(code: string) {
 		throw new Error("UNAUTHORIZED_DOMAIN");
 	}
 
-	let user = await db.query.users.findFirst({ where: eq(users.googleId, payload.sub!) });
+	let user = await db.query.users.findFirst({
+		where: eq(users.googleId, payload.sub!),
+	});
 
 	if (!user) {
 		const [newUser] = await db

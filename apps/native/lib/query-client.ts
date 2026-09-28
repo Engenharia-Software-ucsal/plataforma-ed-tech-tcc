@@ -1,5 +1,9 @@
 import NetInfo from "@react-native-community/netinfo";
-import { focusManager, onlineManager, QueryClient } from "@tanstack/react-query";
+import {
+	focusManager,
+	onlineManager,
+	QueryClient,
+} from "@tanstack/react-query";
 import type { AppStateStatus } from "react-native";
 
 onlineManager.setEventListener((setOnline) => {

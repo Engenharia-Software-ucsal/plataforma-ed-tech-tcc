@@ -3,7 +3,9 @@ export const trpc = {
 	auth: {
 		loginWithGoogle: {
 			mutate: async () => ({ sessionId: "mock-session-id" }),
-			useMutation: () => ({ mutateAsync: async () => ({ sessionId: "mock-session-id" }) }),
+			useMutation: () => ({
+				mutateAsync: async () => ({ sessionId: "mock-session-id" }),
+			}),
 		},
 	},
 } as any;

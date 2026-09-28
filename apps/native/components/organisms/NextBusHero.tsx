@@ -24,8 +24,14 @@ export function NextBusHero({ departure }: { departure: BusDeparture }) {
 				>
 					Próxima saída
 				</AppText>
-				{departure.delayMinutes > 0 && <DelayBadge minutes={departure.delayMinutes} />}
-				<AppText variant="body" tone="primary" className="font-semibold text-[15px]">
+				{departure.delayMinutes > 0 && (
+					<DelayBadge minutes={departure.delayMinutes} />
+				)}
+				<AppText
+					variant="body"
+					tone="primary"
+					className="font-semibold text-[15px]"
+				>
 					Ônibus Universitário
 				</AppText>
 				<View className="flex-row items-center gap-1.5">

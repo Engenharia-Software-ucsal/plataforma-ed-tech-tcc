@@ -10,13 +10,16 @@
 		"ios": "expo run:ios",
 		"prebuild": "expo prebuild",
 		"web": "expo start --web",
-		"lint": "eslint .",
 		"test": "jest --coverage",
 		"test:watch": "jest --watch"
 	},
 	"jest": {
 		"preset": "jest-expo",
-		"coverageReporters": ["json-summary", "text", "lcov"],
+		"coverageReporters": [
+			"json-summary",
+			"text",
+			"lcov"
+		],
 		"moduleNameMapper": {
 			"^react-native-reanimated$": "<rootDir>/__mocks__/react-native-reanimated.js",
 			"^react-native-worklets$": "<rootDir>/__mocks__/react-native-worklets.js"

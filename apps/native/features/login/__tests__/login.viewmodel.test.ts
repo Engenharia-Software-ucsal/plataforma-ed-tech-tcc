@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { Provider } from "jotai";
 import { useLoginViewModel } from "@/features/login/login.viewmodel";
-import { router } from "expo-router";
 
 jest.mock("expo-router", () => ({
 	router: {
@@ -15,12 +15,16 @@ describe("useLoginViewModel", () => {
 	});
 
 	it("starts idle", async () => {
-		const { result } = await renderHook(() => useLoginViewModel(), { wrapper: Provider });
+		const { result } = await renderHook(() => useLoginViewModel(), {
+			wrapper: Provider,
+		});
 		expect(result.current.status).toBe("idle");
 	});
 
 	it("moves to authenticating then back to idle on success", async () => {
-		const { result } = await renderHook(() => useLoginViewModel(), { wrapper: Provider });
+		const { result } = await renderHook(() => useLoginViewModel(), {
+			wrapper: Provider,
+		});
 
 		await act(async () => {
 			await result.current.signInWithGoogle();
@@ -31,10 +35,16 @@ describe("useLoginViewModel", () => {
 	});
 
 	it("surfaces an error message when authentication fails", async () => {
-		const { GoogleSignin } = require("@react-native-google-signin/google-signin");
-		(GoogleSignin.signIn as jest.Mock).mockRejectedValueOnce(new Error("network error"));
+		const {
+			GoogleSignin,
+		} = require("@react-native-google-signin/google-signin");
+		(GoogleSignin.signIn as jest.Mock).mockRejectedValueOnce(
+			new Error("network error"),
+		);
 
-		const { result } = await renderHook(() => useLoginViewModel(), { wrapper: Provider });
+		const { result } = await renderHook(() => useLoginViewModel(), {
+			wrapper: Provider,
+		});
 
 		await act(async () => {
 			await result.current.signInWithGoogle();

@@ -1,4 +1,9 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import {
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react-native";
 import { Provider as JotaiProvider } from "jotai";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { OnibusScreen } from "@/features/onibus/OnibusScreen";
@@ -23,6 +28,8 @@ describe("OnibusScreen", () => {
 	it("filters the list when the UCSAL segment is pressed", async () => {
 		await renderScreen();
 		fireEvent.press(screen.getByTestId("filter-UCSAL"));
-		await waitFor(() => expect(screen.queryByText("Chegada no campus")).toBeNull());
+		await waitFor(() =>
+			expect(screen.queryByText("Chegada no campus")).toBeNull(),
+		);
 	});
 });

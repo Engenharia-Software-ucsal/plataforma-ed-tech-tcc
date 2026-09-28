@@ -39,7 +39,10 @@ export const classRouter = router({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			const [created] = await ctx.db.insert(classSessions).values(input).returning();
+			const [created] = await ctx.db
+				.insert(classSessions)
+				.values(input)
+				.returning();
 			return created;
 		}),
 });

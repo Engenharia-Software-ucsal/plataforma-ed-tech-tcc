@@ -1,11 +1,11 @@
-import { router } from "expo-router";
-import { atom } from "jotai";
 import {
 	GoogleSignin,
-	statusCodes,
 	isErrorWithCode,
+	statusCodes,
 } from "@react-native-google-signin/google-signin";
+import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import { atom } from "jotai";
 import { trpc } from "@/utils/trpc";
 
 GoogleSignin.configure({
@@ -50,7 +50,10 @@ export const authenticateAtomAction = atom(null, async (_, set) => {
 				set(errorAtom, "Erro no login do Google.");
 			}
 		} else {
-			set(errorAtom, err.message || "Não foi possível entrar. Tente novamente.");
+			set(
+				errorAtom,
+				err.message || "Não foi possível entrar. Tente novamente.",
+			);
 		}
 	}
 });

@@ -1,7 +1,21 @@
-import { FunnelSans_500Medium, FunnelSans_600SemiBold } from "@expo-google-fonts/funnel-sans";
-import { Geist_400Regular, Geist_600SemiBold, Geist_700Bold } from "@expo-google-fonts/geist";
-import { GeistMono_400Regular, GeistMono_700Bold } from "@expo-google-fonts/geist-mono";
-import { Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
+import {
+	FunnelSans_500Medium,
+	FunnelSans_600SemiBold,
+} from "@expo-google-fonts/funnel-sans";
+import {
+	Geist_400Regular,
+	Geist_600SemiBold,
+	Geist_700Bold,
+} from "@expo-google-fonts/geist";
+import {
+	GeistMono_400Regular,
+	GeistMono_700Bold,
+} from "@expo-google-fonts/geist-mono";
+import {
+	Inter_400Regular,
+	Inter_600SemiBold,
+	Inter_700Bold,
+} from "@expo-google-fonts/inter";
 import { useFonts } from "expo-font";
 
 export function useAppFontsLoaded(): boolean {

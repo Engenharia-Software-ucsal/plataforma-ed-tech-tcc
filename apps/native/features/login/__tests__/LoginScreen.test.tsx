@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
-import { Provider } from "jotai";
 import { router } from "expo-router";
+import { Provider } from "jotai";
 import { LoginScreen } from "@/features/login/LoginScreen";
 
 jest.mock("expo-router", () => ({
@@ -25,8 +25,12 @@ describe("LoginScreen", () => {
 	});
 
 	it("shows an error message after a failed sign-in", async () => {
-		const { GoogleSignin } = require("@react-native-google-signin/google-signin");
-		(GoogleSignin.signIn as jest.Mock).mockRejectedValueOnce(new Error("network error"));
+		const {
+			GoogleSignin,
+		} = require("@react-native-google-signin/google-signin");
+		(GoogleSignin.signIn as jest.Mock).mockRejectedValueOnce(
+			new Error("network error"),
+		);
 
 		await render(
 			<Provider>

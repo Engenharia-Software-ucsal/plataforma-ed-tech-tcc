@@ -1,5 +1,5 @@
-import { useCallback } from "react";
 import { atom, useAtom } from "jotai";
+import { useCallback } from "react";
 import { QUIZ_QUESTIONS } from "@/features/quiz/quiz.model";
 
 const quizIndexAtom = atom(0);
@@ -7,7 +7,9 @@ const quizSelectedOptionAtom = atom<string | null>(null);
 
 export function useQuizViewModel() {
 	const [index, setIndex] = useAtom(quizIndexAtom);
-	const [selectedOptionId, setSelectedOptionId] = useAtom(quizSelectedOptionAtom);
+	const [selectedOptionId, setSelectedOptionId] = useAtom(
+		quizSelectedOptionAtom,
+	);
 
 	const question = QUIZ_QUESTIONS[index];
 	const total = QUIZ_QUESTIONS.length;

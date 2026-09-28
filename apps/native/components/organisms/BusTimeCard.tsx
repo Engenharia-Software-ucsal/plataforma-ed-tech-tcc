@@ -12,7 +12,11 @@ export type BusTimeCardProps = {
 	onToggleFavorite: (id: string) => void;
 };
 
-export function BusTimeCard({ departure, isFavorite, onToggleFavorite }: BusTimeCardProps) {
+export function BusTimeCard({
+	departure,
+	isFavorite,
+	onToggleFavorite,
+}: BusTimeCardProps) {
 	return (
 		<View className="flex-row items-center gap-3 rounded-lg-card border border-border-subtle bg-surface-secondary p-4">
 			<View className="flex-1 gap-1">
@@ -33,7 +37,10 @@ export function BusTimeCard({ departure, isFavorite, onToggleFavorite }: BusTime
 				</AppText>
 				<DelayBadge minutes={departure.delayMinutes} />
 			</View>
-			<Pressable testID="favorite-button" onPress={() => onToggleFavorite(departure.id)}>
+			<Pressable
+				testID="favorite-button"
+				onPress={() => onToggleFavorite(departure.id)}
+			>
 				<Bell size={18} color={isFavorite ? "#582CFF" : "#A1A1AA"} />
 			</Pressable>
 		</View>
