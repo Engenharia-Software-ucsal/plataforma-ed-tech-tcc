@@ -1,11 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { Provider } from "jotai";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PerfilScreen } from "@/features/perfil/PerfilScreen";
 
 function renderScreen(onSignOut?: () => void) {
 	return render(
 		<SafeAreaProvider>
-			<PerfilScreen onSignOut={onSignOut} />
+			<Provider>
+				<PerfilScreen onSignOut={onSignOut} />
+			</Provider>
 		</SafeAreaProvider>,
 	);
 }

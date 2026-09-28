@@ -3,19 +3,12 @@ import { View } from "react-native";
 import { AppButton } from "@/components/atoms/AppButton";
 import { AppText } from "@/components/atoms/AppText";
 import { IconBadge } from "@/components/atoms/IconBadge";
-import {
-	type LoginViewModelDeps,
-	useLoginViewModel,
-} from "@/features/login/login.viewmodel";
+import { useLoginViewModel } from "@/features/login/login.viewmodel";
 
-export function LoginScreen({
-	authenticate,
-}: {
-	authenticate?: LoginViewModelDeps["authenticate"];
-} = {}) {
-	const { status, error, signInWithGoogle } = useLoginViewModel(
-		authenticate ? { authenticate } : undefined,
-	);
+type LoginScreenType = React.FC;
+
+export const LoginScreen: LoginScreenType = () => {
+	const { status, error, signInWithGoogle } = useLoginViewModel();
 
 	return (
 		<View className="flex-1 items-center justify-center gap-8 bg-surface-primary px-8">
@@ -61,4 +54,4 @@ export function LoginScreen({
 			</View>
 		</View>
 	);
-}
+};

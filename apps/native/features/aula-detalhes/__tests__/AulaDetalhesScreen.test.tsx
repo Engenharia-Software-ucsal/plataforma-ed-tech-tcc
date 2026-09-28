@@ -1,11 +1,14 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { Provider } from "jotai";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AulaDetalhesScreen } from "@/features/aula-detalhes/AulaDetalhesScreen";
 
 function renderScreen() {
 	return render(
 		<SafeAreaProvider>
-			<AulaDetalhesScreen />
+			<Provider>
+				<AulaDetalhesScreen />
+			</Provider>
 		</SafeAreaProvider>,
 	);
 }

@@ -1,0 +1,17 @@
+{
+	"name": "@busuucsal-v3/api",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@trpc/server": "^11.1.2"
+	},
+	"devDependencies": {
+		"@busuucsal-v3/config": "workspace:*",
+		"@types/node": "^22.20.1",
+		"typescript": "^6.0.3"
+	}
+}
