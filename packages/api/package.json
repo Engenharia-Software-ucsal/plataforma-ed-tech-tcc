@@ -7,11 +7,11 @@
 		".": "./src/index.ts"
 	},
 	"dependencies": {
-		"@trpc/server": "^11.1.2"
+		"@trpc/server": "^11.19.0"
 	},
 	"devDependencies": {
 		"@busuucsal-v3/config": "workspace:*",
-		"@types/node": "^22.20.1",
-		"typescript": "^6.0.3"
+		"@types/node": "^26.6.2",
+		"typescript": "^7.0.2"
 	}
 }
