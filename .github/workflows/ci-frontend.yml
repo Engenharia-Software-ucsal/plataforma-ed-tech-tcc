@@ -2,6 +2,8 @@ name: CI / Frontend
 
 on:
   push:
+    branches:
+      - master
     paths:
       - 'apps/native/**'
       - 'packages/**'
@@ -14,6 +16,12 @@ on:
       - 'pnpm-lock.yaml'
       - '.github/workflows/ci-frontend.yml'
   workflow_dispatch:
+    inputs:
+      build_android:
+        description: 'Gerar APK/AAB (EAS Build para Android)?'
+        required: true
+        type: boolean
+        default: false
 
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -57,9 +65,36 @@ jobs:
       - name: Run Tests
         run: pnpm exec turbo run test --filter=native
 
+  deploy:
+    name: 🚀 Deploy Expo (EAS)
+    needs: [code-quality, typecheck, unit-tests]
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node & pnpm
+        uses: ./.github/actions/setup
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 🚀 Publicar OTA Update (Production)
+        working-directory: ./apps/native
+        run: eas update --auto --non-interactive
+
+      - name: 📦 EAS Build (Android)
+        if: github.event.inputs.build_android == 'true'
+        working-directory: ./apps/native
+        run: eas build --platform android --profile production --non-interactive
+
   report:
     name: 📊 Relatório da Esteira
-    needs: [code-quality, typecheck, unit-tests]
+    needs: [code-quality, typecheck, unit-tests, deploy]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -74,5 +109,6 @@ jobs:
           echo "| 🔍 **Análise Estática (Lint)** | ${{ needs.code-quality.result == 'success' && '✅ Passou' || '❌ Falhou' }} | Verifica padrões de código com Biome. |" >> $GITHUB_STEP_SUMMARY
           echo "| 📝 **Typecheck (TypeScript)** | ${{ needs.typecheck.result == 'success' && '✅ Passou' || '❌ Falhou' }} | Validações de tipagem estática do projeto. |" >> $GITHUB_STEP_SUMMARY
           echo "| 🧪 **Testes Unitários (Jest)** | ${{ needs.unit-tests.result == 'success' && '✅ Passou' || '❌ Falhou' }} | Executa os testes isolados dos componentes. |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🚀 **Deploy (EAS)** | ${{ needs.deploy.result == 'success' && '✅ Passou' || (needs.deploy.result == 'skipped' && '⏭️ Ignorado (Ambiente de PR)') || '❌ Falhou' }} | Atualização OTA / Build Android nativo. |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> 💡 **Dica:** Você pode ver os detalhes de cada falha clicando nos jobs na barra lateral à esquerda." >> $GITHUB_STEP_SUMMARY
