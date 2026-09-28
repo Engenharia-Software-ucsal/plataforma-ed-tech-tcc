@@ -27,7 +27,7 @@ export const authenticateAtomAction = atom(null, async (_, set) => {
 			throw new Error("No server auth code returned");
 		}
 		
-		// @ts-expect-error - auth router is being implemented in parallel
+
 		const result = await trpc.auth.loginWithGoogle.mutate({ 
 			serverAuthCode: response.data.serverAuthCode 
 		});

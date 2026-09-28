@@ -4,7 +4,6 @@ import { AppButton } from "@/components/atoms/AppButton";
 import { AppText } from "@/components/atoms/AppText";
 import { IconBadge } from "@/components/atoms/IconBadge";
 import {
-	type LoginViewModelDeps,
 	useLoginViewModel,
 } from "@/features/login/login.viewmodel";
 
