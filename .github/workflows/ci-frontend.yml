@@ -1,0 +1,58 @@
+name: CI / Frontend
+
+on:
+  push:
+    paths:
+      - 'apps/native/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/ci-frontend.yml'
+  pull_request:
+    paths:
+      - 'apps/native/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/ci-frontend.yml'
+  workflow_dispatch:
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  dependencies:
+    name: 📦 Instalando Dependências
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+  code-quality:
+    name: 🔍 Análise de Padrão (Lint)
+    needs: dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Biome Check
+        run: turbo run check --filter=native
+
+  typecheck:
+    name: 📝 Validação de Tipos
+    needs: dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: TypeScript Check
+        run: turbo run check-types --filter=native
+
+  unit-tests:
+    name: 🧪 Testes Unitários
+    needs: dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Run Tests
+        run: turbo run test --filter=native
