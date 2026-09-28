@@ -14,7 +14,7 @@
 			"reactCompiler": true
 		},
 		"android": {
-			"package": "com.anonymous.busuucsalv3"
+			"package": "br.edu.ucsal.busu"
 		},
 		"extra": {
 			"eas": {
