@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Biome Check
-        run: turbo run check --filter=server
+        run: pnpm exec turbo run check --filter=server
 
   typecheck:
     name: 📝 Validação de Tipos
@@ -73,7 +73,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Run Tests
-        run: turbo run test --filter=server
+        run: pnpm exec turbo run test --filter=server
 
   build:
     name: 🏗️ Construindo a Aplicação
@@ -83,4 +83,4 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Build Server
-        run: turbo run build --filter=server
+        run: pnpm exec turbo run build --filter=server

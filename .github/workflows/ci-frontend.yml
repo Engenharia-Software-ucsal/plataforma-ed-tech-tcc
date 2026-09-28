@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Biome Check
-        run: turbo run check --filter=native
+        run: pnpm exec turbo run check --filter=native
 
   typecheck:
     name: 📝 Validação de Tipos
@@ -45,7 +45,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: TypeScript Check
-        run: turbo run check-types --filter=native
+        run: pnpm exec turbo run check-types --filter=native
 
   unit-tests:
     name: 🧪 Testes Unitários
@@ -55,4 +55,4 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Run Tests
-        run: turbo run test --filter=native
+        run: pnpm exec turbo run test --filter=native
