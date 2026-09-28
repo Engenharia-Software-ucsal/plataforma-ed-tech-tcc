@@ -13,18 +13,13 @@ const FILTER_OPTIONS: readonly BusStopFilter[] = ["Todos", "UCSAL", "Pituaçu"];
 
 export function OnibusScreen() {
 	const router = useRouter();
-	const { next, filtered, filter, setFilter, isFavorite, toggleFavorite } =
-		useOnibusViewModel();
+	const { next, filtered, filter, setFilter, isFavorite, toggleFavorite } = useOnibusViewModel();
 
 	return (
 		<Container className="bg-surface-primary" isScrollable>
 			<View className="gap-6 p-5">
 				<View className="flex-row items-center justify-between">
-					<AppText
-						variant="heading"
-						tone="primary"
-						className="font-bold text-[28px]"
-					>
+					<AppText variant="heading" tone="primary" className="font-bold text-[28px]">
 						Ônibus
 					</AppText>
 					<View className="flex-row items-center gap-4">
@@ -34,10 +29,7 @@ export function OnibusScreen() {
 						>
 							<Bell size={24} color="#A1A1AA" />
 						</Pressable>
-						<Pressable
-							testID="profile-button"
-							onPress={() => router.push("/perfil")}
-						>
+						<Pressable testID="profile-button" onPress={() => router.push("/perfil")}>
 							<User size={24} color="#A1A1AA" />
 						</Pressable>
 					</View>
@@ -45,18 +37,10 @@ export function OnibusScreen() {
 
 				<NextBusHero departure={next} />
 
-				<SegmentedFilter
-					options={FILTER_OPTIONS}
-					value={filter}
-					onChange={setFilter}
-				/>
+				<SegmentedFilter options={FILTER_OPTIONS} value={filter} onChange={setFilter} />
 
 				<View className="gap-3">
-					<AppText
-						variant="heading"
-						tone="primary"
-						className="font-semibold text-lg"
-					>
+					<AppText variant="heading" tone="primary" className="font-semibold text-lg">
 						Próximos horários
 					</AppText>
 					<View className="gap-2.5">

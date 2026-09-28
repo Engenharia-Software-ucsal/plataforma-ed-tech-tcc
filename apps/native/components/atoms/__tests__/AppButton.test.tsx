@@ -16,9 +16,7 @@ describe("AppButton", () => {
 
 	it("does not call onPress when disabled", async () => {
 		const onPress = jest.fn();
-		await render(
-			<AppButton label="Entrar" onPress={onPress} disabled testID="btn" />,
-		);
+		await render(<AppButton label="Entrar" onPress={onPress} disabled testID="btn" />);
 		fireEvent.press(screen.getByTestId("btn"));
 		expect(onPress).not.toHaveBeenCalled();
 	});

@@ -23,10 +23,7 @@ export function useOnibusViewModel() {
 
 	const next = filtered[0] ?? BUS_DEPARTURES[0];
 
-	const isFavorite = useCallback(
-		(id: string) => favorites.has(id),
-		[favorites],
-	);
+	const isFavorite = useCallback((id: string) => favorites.has(id), [favorites]);
 
 	const toggleFavorite = useCallback(
 		(id: string) => {

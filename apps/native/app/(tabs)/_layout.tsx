@@ -23,9 +23,7 @@ export default function TabLayout() {
 				name="aulas"
 				options={{
 					title: "Aulas",
-					tabBarIcon: ({ color, size }) => (
-						<BookOpen size={size} color={color} />
-					),
+					tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} />,
 				}}
 			/>
 		</Tabs>

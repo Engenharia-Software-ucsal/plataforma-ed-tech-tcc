@@ -20,10 +20,9 @@ describe("usePerfilViewModel", () => {
 
 	it("calls the injected sign-out callback", async () => {
 		const onSignOut = jest.fn();
-		const { result } = await renderHook(() =>
-			usePerfilViewModel({ onSignOut }),
-			{ wrapper: Provider }
-		);
+		const { result } = await renderHook(() => usePerfilViewModel({ onSignOut }), {
+			wrapper: Provider,
+		});
 		await act(async () => result.current.signOut());
 		expect(onSignOut).toHaveBeenCalledTimes(1);
 	});

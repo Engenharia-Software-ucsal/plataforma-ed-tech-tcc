@@ -1,6 +1,10 @@
 import { router } from "expo-router";
 import { atom } from "jotai";
-import { GoogleSignin, statusCodes, isErrorWithCode } from "@react-native-google-signin/google-signin";
+import {
+	GoogleSignin,
+	statusCodes,
+	isErrorWithCode,
+} from "@react-native-google-signin/google-signin";
 import * as SecureStore from "expo-secure-store";
 import { trpc } from "@/utils/trpc";
 
@@ -8,7 +12,10 @@ GoogleSignin.configure({
 	webClientId: process.env.EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID,
 	offlineAccess: true,
 	forceCodeForRefreshToken: true,
-	scopes: ["https://www.googleapis.com/auth/classroom.courses.readonly", "https://www.googleapis.com/auth/drive.readonly"]
+	scopes: [
+		"https://www.googleapis.com/auth/classroom.courses.readonly",
+		"https://www.googleapis.com/auth/drive.readonly",
+	],
 });
 
 export type AuthStatus = "idle" | "authenticating" | "error";
@@ -22,16 +29,15 @@ export const authenticateAtomAction = atom(null, async (_, set) => {
 	try {
 		await GoogleSignin.hasPlayServices();
 		const response = await GoogleSignin.signIn();
-		
+
 		if (!response.data?.serverAuthCode) {
 			throw new Error("No server auth code returned");
 		}
-		
 
-		const result = await trpc.auth.loginWithGoogle.mutate({ 
-			serverAuthCode: response.data.serverAuthCode 
+		const result = await trpc.auth.loginWithGoogle.mutate({
+			serverAuthCode: response.data.serverAuthCode,
 		});
-		
+
 		await SecureStore.setItemAsync("session_id", result.sessionId);
 		set(statusAtom, "idle");
 		router.replace("/(tabs)/onibus");

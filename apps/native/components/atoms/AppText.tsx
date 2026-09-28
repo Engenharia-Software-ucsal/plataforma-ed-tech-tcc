@@ -2,14 +2,7 @@ import { Text, type TextProps } from "react-native";
 import { cn } from "@/lib/cn";
 
 type Variant = "heading" | "body" | "caption" | "mono";
-type Tone =
-	| "primary"
-	| "secondary"
-	| "muted"
-	| "accent"
-	| "success"
-	| "warning"
-	| "danger";
+type Tone = "primary" | "secondary" | "muted" | "accent" | "success" | "warning" | "danger";
 
 const VARIANT_CLASS: Record<Variant, string> = {
 	heading: "font-heading",
@@ -42,10 +35,7 @@ export function AppText({
 	...props
 }: AppTextProps) {
 	return (
-		<Text
-			className={cn(VARIANT_CLASS[variant], TONE_CLASS[tone], className)}
-			{...props}
-		>
+		<Text className={cn(VARIANT_CLASS[variant], TONE_CLASS[tone], className)} {...props}>
 			{children}
 		</Text>
 	);

@@ -11,9 +11,15 @@ export const authRouter = router({
 				return await authenticateWithGoogle(input.serverAuthCode);
 			} catch (err: unknown) {
 				if (err instanceof Error && err.message === "UNAUTHORIZED_DOMAIN") {
-					throw new TRPCError({ code: "FORBIDDEN", message: "Use seu e-mail @ucsal.edu.br" });
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message: "Use seu e-mail @ucsal.edu.br",
+					});
 				}
-				throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Falha na autenticação" });
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Falha na autenticação",
+				});
 			}
 		}),
 });

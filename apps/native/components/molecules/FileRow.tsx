@@ -12,14 +12,7 @@ export type FileRowProps = {
 	testID?: string;
 };
 
-export function FileRow({
-	icon,
-	name,
-	meta,
-	badge,
-	onPress,
-	testID,
-}: FileRowProps) {
+export function FileRow({ icon, name, meta, badge, onPress, testID }: FileRowProps) {
 	return (
 		<Pressable
 			testID={testID}
@@ -30,11 +23,7 @@ export function FileRow({
 				{icon}
 			</View>
 			<View className="flex-1 gap-0.5">
-				<AppText
-					variant="body"
-					tone="primary"
-					className="font-semibold text-[13px]"
-				>
+				<AppText variant="body" tone="primary" className="font-semibold text-[13px]">
 					{name}
 				</AppText>
 				<AppText variant="caption" tone="muted" className="text-[11px]">

@@ -9,32 +9,32 @@ vi.mock("google-auth-library", () => {
 		OAuth2Client: vi.fn().mockImplementation(() => {
 			return {
 				getToken: vi.fn().mockResolvedValue({
-					tokens: { id_token: "mock_id_token", refresh_token: "mock_refresh" }
+					tokens: { id_token: "mock_id_token", refresh_token: "mock_refresh" },
 				}),
 				verifyIdToken: vi.fn().mockResolvedValue({
-					getPayload: () => globalThis.__mockGetPayload()
-				})
+					getPayload: () => globalThis.__mockGetPayload(),
+				}),
 			};
-		})
+		}),
 	};
 });
 
 // Mock database to prevent actual inserts during logic test
 vi.mock("../src/db/index.js", () => {
-    return {
-        db: {
-            query: {
-                users: {
-                    findFirst: vi.fn().mockResolvedValue(null)
-                }
-            },
-            insert: vi.fn().mockReturnValue({
-                values: vi.fn().mockReturnValue({
-                    returning: vi.fn().mockResolvedValue([{ id: "mock_user_id" }])
-                })
-            })
-        }
-    };
+	return {
+		db: {
+			query: {
+				users: {
+					findFirst: vi.fn().mockResolvedValue(null),
+				},
+			},
+			insert: vi.fn().mockReturnValue({
+				values: vi.fn().mockReturnValue({
+					returning: vi.fn().mockResolvedValue([{ id: "mock_user_id" }]),
+				}),
+			}),
+		},
+	};
 });
 
 describe("authenticateWithGoogle domain restrictions", () => {
@@ -44,7 +44,7 @@ describe("authenticateWithGoogle domain restrictions", () => {
 			email: "student@gmail.com",
 			sub: "12345",
 			name: "Student",
-			picture: "pic.jpg"
+			picture: "pic.jpg",
 		});
 
 		await expect(authenticateWithGoogle("auth_code")).rejects.toThrow("UNAUTHORIZED_DOMAIN");
@@ -56,7 +56,7 @@ describe("authenticateWithGoogle domain restrictions", () => {
 			email: "student@ucsal.edu.br",
 			sub: "12345",
 			name: "Student",
-			picture: "pic.jpg"
+			picture: "pic.jpg",
 		});
 
 		const result = await authenticateWithGoogle("auth_code");

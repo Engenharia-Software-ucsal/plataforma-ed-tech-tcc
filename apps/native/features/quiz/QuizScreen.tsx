@@ -10,15 +10,8 @@ import { useQuizViewModel } from "@/features/quiz/quiz.viewmodel";
 
 export function QuizScreen() {
 	const router = useRouter();
-	const {
-		question,
-		index,
-		total,
-		isLast,
-		selectedOptionId,
-		selectOption,
-		goNext,
-	} = useQuizViewModel();
+	const { question, index, total, isLast, selectedOptionId, selectOption, goNext } =
+		useQuizViewModel();
 	const progressPercent = ((index + 1) / total) * 100;
 
 	function handleNext() {
@@ -41,11 +34,7 @@ export function QuizScreen() {
 						>
 							<X size={16} color="#FFFFFF" />
 						</Pressable>
-						<AppText
-							variant="heading"
-							tone="primary"
-							className="font-bold text-base"
-						>
+						<AppText variant="heading" tone="primary" className="font-bold text-base">
 							Quiz de Revisão
 						</AppText>
 					</View>
@@ -63,11 +52,7 @@ export function QuizScreen() {
 
 				<View className="gap-4 rounded-lg-card border border-border-subtle bg-surface-secondary p-5">
 					<Chip label={question.topic} tone="accent" />
-					<AppText
-						variant="heading"
-						tone="primary"
-						className="font-semibold text-[17px]"
-					>
+					<AppText variant="heading" tone="primary" className="font-semibold text-[17px]">
 						{question.text}
 					</AppText>
 					<View className="gap-2.5">

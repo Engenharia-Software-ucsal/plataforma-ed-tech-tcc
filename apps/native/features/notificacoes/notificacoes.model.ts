@@ -1,9 +1,5 @@
 export type NotificationIconName =
-	| "navigation"
-	| "sparkles"
-	| "triangle-alert"
-	| "graduation-cap"
-	| "gauge";
+	"navigation" | "sparkles" | "triangle-alert" | "graduation-cap" | "gauge";
 
 export type NotificationItem = {
 	id: string;

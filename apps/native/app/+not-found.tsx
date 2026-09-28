@@ -10,10 +10,7 @@ export default function NotFoundScreen() {
 			<Stack.Screen options={{ title: "Not Found" }} />
 			<Container>
 				<View className="flex-1 items-center justify-center p-4">
-					<Surface
-						variant="secondary"
-						className="max-w-sm items-center rounded-lg p-6"
-					>
+					<Surface variant="secondary" className="max-w-sm items-center rounded-lg p-6">
 						<Text className="mb-3 text-4xl">🤔</Text>
 						<Text className="mb-1 font-medium text-foreground text-lg">
 							Page Not Found

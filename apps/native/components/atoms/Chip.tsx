@@ -12,10 +12,7 @@ const BG_CLASS: Record<Tone, string> = {
 	muted: "bg-border-subtle",
 };
 
-const TEXT_TONE: Record<
-	Tone,
-	"accent" | "success" | "warning" | "danger" | "muted"
-> = {
+const TEXT_TONE: Record<Tone, "accent" | "success" | "warning" | "danger" | "muted"> = {
 	accent: "accent",
 	success: "success",
 	warning: "warning",
@@ -30,14 +27,7 @@ export type ChipProps = ViewProps & {
 	testID?: string;
 };
 
-export function Chip({
-	label,
-	tone = "accent",
-	icon,
-	testID,
-	className,
-	...props
-}: ChipProps) {
+export function Chip({ label, tone = "accent", icon, testID, className, ...props }: ChipProps) {
 	return (
 		<View
 			testID={testID}
@@ -49,11 +39,7 @@ export function Chip({
 			{...props}
 		>
 			{icon}
-			<AppText
-				variant="caption"
-				tone={TEXT_TONE[tone]}
-				className="font-semibold text-[10px]"
-			>
+			<AppText variant="caption" tone={TEXT_TONE[tone]} className="font-semibold text-[10px]">
 				{label}
 			</AppText>
 		</View>

@@ -15,11 +15,7 @@ const departure: BusDeparture = {
 describe("BusTimeCard", () => {
 	it("renders the time, route and status", async () => {
 		await render(
-			<BusTimeCard
-				departure={departure}
-				isFavorite={false}
-				onToggleFavorite={jest.fn()}
-			/>,
+			<BusTimeCard departure={departure} isFavorite={false} onToggleFavorite={jest.fn()} />,
 		);
 		expect(screen.getByText("08:00")).toBeTruthy();
 		expect(screen.getByText("UCSAL → Estação")).toBeTruthy();

@@ -10,12 +10,7 @@ export type InsightCardProps = {
 	onGenerateQuiz: () => void;
 };
 
-export function InsightCard({
-	summary,
-	coverageText,
-	points,
-	onGenerateQuiz,
-}: InsightCardProps) {
+export function InsightCard({ summary, coverageText, points, onGenerateQuiz }: InsightCardProps) {
 	return (
 		<View className="gap-3 rounded-lg-card border border-accent-primary bg-accent-light p-[18px]">
 			<View className="flex-row items-center gap-2">

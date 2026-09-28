@@ -18,7 +18,7 @@ describe("LoginScreen", () => {
 		await render(
 			<Provider>
 				<LoginScreen />
-			</Provider>
+			</Provider>,
 		);
 		expect(screen.getByText("Compasso UCSAL")).toBeTruthy();
 		expect(screen.getByText("Entrar com conta UCSAL (Google)")).toBeTruthy();
@@ -31,13 +31,13 @@ describe("LoginScreen", () => {
 		await render(
 			<Provider>
 				<LoginScreen />
-			</Provider>
+			</Provider>,
 		);
-		
+
 		await act(async () => {
 			fireEvent.press(screen.getByText("Entrar com conta UCSAL (Google)"));
 		});
-		
+
 		expect(await screen.findByText(/network error/)).toBeTruthy();
 	});
 });

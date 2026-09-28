@@ -13,22 +13,14 @@ export function AulasScreen() {
 	return (
 		<Container className="bg-surface-primary">
 			<View className="gap-6 p-5">
-				<AppText
-					variant="heading"
-					tone="primary"
-					className="font-bold text-[28px]"
-				>
+				<AppText variant="heading" tone="primary" className="font-bold text-[28px]">
 					Aulas
 				</AppText>
 
 				<NextClassHero session={next} />
 
 				<View className="gap-3">
-					<AppText
-						variant="heading"
-						tone="primary"
-						className="font-semibold text-lg"
-					>
+					<AppText variant="heading" tone="primary" className="font-semibold text-lg">
 						Todas as aulas
 					</AppText>
 					<View className="gap-2.5">

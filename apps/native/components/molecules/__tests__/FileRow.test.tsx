@@ -5,11 +5,7 @@ import { FileRow } from "@/components/molecules/FileRow";
 describe("FileRow", () => {
 	it("renders name and meta", async () => {
 		await render(
-			<FileRow
-				icon={<Text>ICON</Text>}
-				name="Slides - Aula 04.pdf"
-				meta="2.4 MB · PDF"
-			/>,
+			<FileRow icon={<Text>ICON</Text>} name="Slides - Aula 04.pdf" meta="2.4 MB · PDF" />,
 		);
 		expect(screen.getByText("Slides - Aula 04.pdf")).toBeTruthy();
 		expect(screen.getByText("2.4 MB · PDF")).toBeTruthy();
@@ -17,12 +13,7 @@ describe("FileRow", () => {
 
 	it("renders a novo badge when requested", async () => {
 		await render(
-			<FileRow
-				icon={<Text>ICON</Text>}
-				name="Lista.xlsx"
-				meta="180 KB"
-				badge="novo"
-			/>,
+			<FileRow icon={<Text>ICON</Text>} name="Lista.xlsx" meta="180 KB" badge="novo" />,
 		);
 		expect(screen.getByText("novo")).toBeTruthy();
 	});

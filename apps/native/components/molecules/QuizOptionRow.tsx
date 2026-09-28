@@ -11,13 +11,7 @@ export type QuizOptionRowProps = {
 	testID?: string;
 };
 
-export function QuizOptionRow({
-	letter,
-	text,
-	selected,
-	onPress,
-	testID,
-}: QuizOptionRowProps) {
+export function QuizOptionRow({ letter, text, selected, onPress, testID }: QuizOptionRowProps) {
 	return (
 		<Pressable
 			testID={testID}

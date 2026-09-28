@@ -44,11 +44,7 @@ export function NotificationRow({
 			</View>
 			<View className="flex-1 gap-0.5">
 				<View className="flex-row items-center justify-between">
-					<AppText
-						variant="body"
-						tone="primary"
-						className="font-semibold text-[13px]"
-					>
+					<AppText variant="body" tone="primary" className="font-semibold text-[13px]">
 						{title}
 					</AppText>
 					<AppText variant="caption" tone="muted" className="text-[10px]">

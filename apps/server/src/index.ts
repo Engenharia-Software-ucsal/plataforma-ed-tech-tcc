@@ -1,10 +1,7 @@
 import "dotenv/config";
 import { env } from "@busuucsal-v3/env/server";
 import cors from "@fastify/cors";
-import {
-	type FastifyTRPCPluginOptions,
-	fastifyTRPCPlugin,
-} from "@trpc/server/adapters/fastify";
+import { type FastifyTRPCPluginOptions, fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
 import Fastify from "fastify";
 import { pool } from "./db/index.js";
 import { createContext } from "./trpc/context.js";

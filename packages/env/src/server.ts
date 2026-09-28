@@ -8,9 +8,7 @@ export const env = createEnv({
 			.string()
 			.default("3000")
 			.transform((v) => Number.parseInt(v, 10)),
-		NODE_ENV: z
-			.enum(["development", "production", "test"])
-			.default("development"),
+		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 		GOOGLE_SERVER_CLIENT_ID: z.string().min(1),
 		GOOGLE_CLIENT_SECRET: z.string().min(1),
 	},

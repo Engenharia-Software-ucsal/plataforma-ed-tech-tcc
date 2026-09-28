@@ -13,13 +13,8 @@ export type PerfilScreenProps = {
 
 export const PerfilScreen: React.FC<PerfilScreenProps> = ({ onSignOut }) => {
 	const router = useRouter();
-	const {
-		profile,
-		accounts,
-		notificationsEnabled,
-		toggleNotifications,
-		signOut,
-	} = usePerfilViewModel({ onSignOut });
+	const { profile, accounts, notificationsEnabled, toggleNotifications, signOut } =
+		usePerfilViewModel({ onSignOut });
 
 	return (
 		<Container className="bg-surface-primary">
@@ -32,11 +27,7 @@ export const PerfilScreen: React.FC<PerfilScreenProps> = ({ onSignOut }) => {
 					>
 						<ChevronLeft size={18} color="#FFFFFF" />
 					</Pressable>
-					<AppText
-						variant="heading"
-						tone="primary"
-						className="font-bold text-[28px]"
-					>
+					<AppText variant="heading" tone="primary" className="font-bold text-[28px]">
 						Perfil
 					</AppText>
 				</View>
@@ -44,11 +35,7 @@ export const PerfilScreen: React.FC<PerfilScreenProps> = ({ onSignOut }) => {
 				<View className="flex-row items-center gap-3.5 rounded-lg-card border border-border-subtle bg-surface-secondary p-4">
 					<IconBadge
 						icon={
-							<AppText
-								variant="heading"
-								tone="primary"
-								className="font-bold text-lg"
-							>
+							<AppText variant="heading" tone="primary" className="font-bold text-lg">
 								{profile.initials}
 							</AppText>
 						}
@@ -70,11 +57,7 @@ export const PerfilScreen: React.FC<PerfilScreenProps> = ({ onSignOut }) => {
 				</View>
 
 				<View className="gap-3">
-					<AppText
-						variant="heading"
-						tone="muted"
-						className="font-semibold text-sm"
-					>
+					<AppText variant="heading" tone="muted" className="font-semibold text-sm">
 						Contas conectadas
 					</AppText>
 					{accounts.map((account) => (
@@ -103,11 +86,7 @@ export const PerfilScreen: React.FC<PerfilScreenProps> = ({ onSignOut }) => {
 				</View>
 
 				<View className="gap-3">
-					<AppText
-						variant="heading"
-						tone="muted"
-						className="font-semibold text-sm"
-					>
+					<AppText variant="heading" tone="muted" className="font-semibold text-sm">
 						Preferências
 					</AppText>
 					<View className="flex-row items-center gap-3 rounded-lg-card border border-border-subtle bg-surface-secondary p-3.5">

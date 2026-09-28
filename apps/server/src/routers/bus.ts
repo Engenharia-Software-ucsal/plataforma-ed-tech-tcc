@@ -37,10 +37,7 @@ export const busRouter = router({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			const [created] = await ctx.db
-				.insert(busDepartures)
-				.values(input)
-				.returning();
+			const [created] = await ctx.db.insert(busDepartures).values(input).returning();
 			return created;
 		}),
 });

@@ -50,11 +50,7 @@ export function NotificacoesScreen() {
 					>
 						<ChevronLeft size={18} color="#FFFFFF" />
 					</Pressable>
-					<AppText
-						variant="heading"
-						tone="primary"
-						className="font-bold text-lg"
-					>
+					<AppText variant="heading" tone="primary" className="font-bold text-lg">
 						Notificações
 					</AppText>
 				</View>
@@ -63,10 +59,7 @@ export function NotificacoesScreen() {
 					{NOTIFICATIONS_MOCK.map((notification) => (
 						<NotificationRow
 							key={notification.id}
-							icon={iconFor(
-								notification.iconName,
-								ICON_COLOR[notification.iconTone],
-							)}
+							icon={iconFor(notification.iconName, ICON_COLOR[notification.iconTone])}
 							iconTone={notification.iconTone}
 							title={notification.title}
 							description={notification.description}

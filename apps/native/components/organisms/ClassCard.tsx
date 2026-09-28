@@ -25,11 +25,7 @@ export function ClassCard({ session, onPress }: ClassCardProps) {
 			</View>
 			<View className="h-12 w-0.5 rounded-full bg-accent-primary" />
 			<View className="flex-1 gap-0.5">
-				<AppText
-					variant="body"
-					tone="primary"
-					className="font-semibold text-sm"
-				>
+				<AppText variant="body" tone="primary" className="font-semibold text-sm">
 					{session.subject}
 				</AppText>
 				<AppText variant="body" tone="secondary" className="text-xs">

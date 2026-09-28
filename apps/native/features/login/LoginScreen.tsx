@@ -3,9 +3,7 @@ import { View } from "react-native";
 import { AppButton } from "@/components/atoms/AppButton";
 import { AppText } from "@/components/atoms/AppText";
 import { IconBadge } from "@/components/atoms/IconBadge";
-import {
-	useLoginViewModel,
-} from "@/features/login/login.viewmodel";
+import { useLoginViewModel } from "@/features/login/login.viewmodel";
 
 type LoginScreenType = React.FC;
 
@@ -21,11 +19,7 @@ export const LoginScreen: LoginScreenType = () => {
 			/>
 
 			<View className="items-center gap-2">
-				<AppText
-					variant="heading"
-					tone="primary"
-					className="font-bold text-[26px]"
-				>
+				<AppText variant="heading" tone="primary" className="font-bold text-[26px]">
 					Compasso UCSAL
 				</AppText>
 				<AppText variant="body" tone="muted" className="text-center text-sm">
@@ -45,13 +39,8 @@ export const LoginScreen: LoginScreenType = () => {
 						{error}
 					</AppText>
 				)}
-				<AppText
-					variant="caption"
-					tone="muted"
-					className="text-center text-[11px]"
-				>
-					Ao continuar, você autoriza acesso de leitura ao Google Classroom e
-					Drive
+				<AppText variant="caption" tone="muted" className="text-center text-[11px]">
+					Ao continuar, você autoriza acesso de leitura ao Google Classroom e Drive
 				</AppText>
 			</View>
 		</View>
