@@ -1,0 +1,54 @@
+name: Expo Deploy & Update
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/native/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'O que deseja fazer?'
+        required: true
+        default: 'update'
+        type: choice
+        options:
+          - update
+          - build-android
+          - build-ios
+          - build-all
+
+jobs:
+  expo-deploy:
+    name: 🚀 Deploy Expo (EAS)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node & pnpm
+        uses: ./.github/actions/setup
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 🚀 Publicar OTA Update (Production)
+        if: github.event_name == 'push' || github.event.inputs.action == 'update'
+        working-directory: ./apps/native
+        run: eas update --auto --non-interactive
+
+      - name: 📦 EAS Build (Android)
+        if: github.event.inputs.action == 'build-android' || github.event.inputs.action == 'build-all'
+        working-directory: ./apps/native
+        run: eas build --platform android --profile production --non-interactive
+
+      - name: 🍎 EAS Build (iOS)
+        if: github.event.inputs.action == 'build-ios' || github.event.inputs.action == 'build-all'
+        working-directory: ./apps/native
+        run: eas build --platform ios --profile production --non-interactive
