@@ -25,9 +25,8 @@ describe("LoginScreen", () => {
 	});
 
 	it("shows an error message after a failed sign-in", async () => {
-		(router.replace as jest.Mock).mockImplementationOnce(() => {
-			throw new Error("network");
-		});
+		const { GoogleSignin } = require("@react-native-google-signin/google-signin");
+		(GoogleSignin.signIn as jest.Mock).mockRejectedValueOnce(new Error("network error"));
 
 		await render(
 			<Provider>
@@ -39,6 +38,6 @@ describe("LoginScreen", () => {
 			fireEvent.press(screen.getByText("Entrar com conta UCSAL (Google)"));
 		});
 		
-		expect(await screen.findByText(/Não foi possível entrar/)).toBeTruthy();
+		expect(await screen.findByText(/network error/)).toBeTruthy();
 	});
 });

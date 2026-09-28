@@ -31,9 +31,8 @@ describe("useLoginViewModel", () => {
 	});
 
 	it("surfaces an error message when authentication fails", async () => {
-		(router.replace as jest.Mock).mockImplementationOnce(() => {
-			throw new Error("network error");
-		});
+		const { GoogleSignin } = require("@react-native-google-signin/google-signin");
+		(GoogleSignin.signIn as jest.Mock).mockRejectedValueOnce(new Error("network error"));
 
 		const { result } = await renderHook(() => useLoginViewModel(), { wrapper: Provider });
 
@@ -42,8 +41,6 @@ describe("useLoginViewModel", () => {
 		});
 
 		expect(result.current.status).toBe("error");
-		expect(result.current.error).toBe(
-			"Não foi possível entrar. Tente novamente.",
-		);
+		expect(result.current.error).toBe("network error");
 	});
 });

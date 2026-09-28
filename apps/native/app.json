@@ -8,7 +8,7 @@
 		},
 		"name": "busuucsal-v3",
 		"slug": "busuucsal-v3",
-		"plugins": ["expo-font"],
+		"plugins": ["expo-font", "@react-native-google-signin/google-signin"],
 		"experiments": {
 			"typedRoutes": true,
 			"reactCompiler": true
