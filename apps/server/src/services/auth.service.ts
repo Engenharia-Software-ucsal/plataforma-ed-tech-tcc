@@ -2,11 +2,12 @@ import { OAuth2Client } from "google-auth-library";
 import { db } from "../db/index.js";
 import { users, sessions } from "../db/schema/index.js";
 import { eq } from "drizzle-orm";
-import crypto from "crypto";
+import crypto from "node:crypto";
+import { env } from "@busuucsal-v3/env/server";
 
 const client = new OAuth2Client(
-	process.env.GOOGLE_SERVER_CLIENT_ID,
-	process.env.GOOGLE_CLIENT_SECRET,
+	env.GOOGLE_SERVER_CLIENT_ID,
+	env.GOOGLE_CLIENT_SECRET,
 	"postmessage"
 );
 
@@ -14,7 +15,7 @@ export async function authenticateWithGoogle(code: string) {
 	const { tokens } = await client.getToken(code);
 	const ticket = await client.verifyIdToken({
 		idToken: tokens.id_token!,
-		audience: process.env.GOOGLE_SERVER_CLIENT_ID,
+		audience: env.GOOGLE_SERVER_CLIENT_ID,
 	});
 	const payload = ticket.getPayload()!;
 	
