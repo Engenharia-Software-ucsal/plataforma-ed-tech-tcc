@@ -39,3 +39,9 @@ jobs:
 
       - name: Run frontend tests
         run: pnpm --filter native run test
+
+      - name: Build backend
+        run: pnpm --filter server run build
+
+      - name: Typecheck frontend
+        run: pnpm --filter native exec tsc --noEmit
