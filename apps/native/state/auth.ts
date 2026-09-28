@@ -42,6 +42,7 @@ export const authenticateAtomAction = atom(null, async (_, set) => {
 		set(statusAtom, "idle");
 		router.replace("/(tabs)/onibus");
 	} catch (err: any) {
+		console.error("Google Signin Error:", err, "Code:", err?.code);
 		set(statusAtom, "error");
 		if (isErrorWithCode(err)) {
 			if (err.code === statusCodes.SIGN_IN_CANCELLED) {
