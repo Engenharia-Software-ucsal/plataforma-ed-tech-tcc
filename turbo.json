@@ -1,6 +1,11 @@
 {
 	"$schema": "https://turbo.build/schema.json",
 	"ui": "tui",
+	"globalEnv": [
+		"DATABASE_URL",
+		"GOOGLE_SERVER_CLIENT_ID",
+		"GOOGLE_CLIENT_SECRET"
+	],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
