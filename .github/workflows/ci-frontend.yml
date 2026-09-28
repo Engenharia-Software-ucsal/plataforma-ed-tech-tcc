@@ -56,3 +56,23 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Run Tests
         run: pnpm exec turbo run test --filter=native
+
+  report:
+    name: 📊 Relatório da Esteira
+    needs: [code-quality, typecheck, unit-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📝 Gerar Annotations (README)
+        run: |
+          echo "# 📱 Relatório do Frontend (Expo)" >> $GITHUB_STEP_SUMMARY
+          echo "Este relatório consolida os resultados da esteira para esta versão do código:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Resultados das Validações" >> $GITHUB_STEP_SUMMARY
+          echo "| Etapa | Status | Descrição |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔍 **Análise Estática (Lint)** | ${{ needs.code-quality.result == 'success' && '✅ Passou' || '❌ Falhou' }} | Verifica padrões de código com Biome. |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📝 **Typecheck (TypeScript)** | ${{ needs.typecheck.result == 'success' && '✅ Passou' || '❌ Falhou' }} | Validações de tipagem estática do projeto. |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 **Testes Unitários (Jest)** | ${{ needs.unit-tests.result == 'success' && '✅ Passou' || '❌ Falhou' }} | Executa os testes isolados dos componentes. |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> 💡 **Dica:** Você pode ver os detalhes de cada falha clicando nos jobs na barra lateral à esquerda." >> $GITHUB_STEP_SUMMARY
