@@ -21,6 +21,12 @@
 				"projectId": "bd26616e-7a21-4fa6-9a2e-e275cbe70503"
 			}
 		},
+		"updates": {
+			"url": "https://u.expo.dev/bd26616e-7a21-4fa6-9a2e-e275cbe70503"
+		},
+		"runtimeVersion": {
+			"policy": "appVersion"
+		},
 		"owner": "luminuszz"
 	}
 }
