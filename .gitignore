@@ -64,3 +64,4 @@ graphify-out
 
 *.apk
 __pycache__/
+.worktrees/
