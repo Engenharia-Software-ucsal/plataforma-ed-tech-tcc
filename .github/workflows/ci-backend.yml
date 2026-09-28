@@ -24,7 +24,7 @@ jobs:
     name: 📦 Instalando Dependências
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
 
   code-quality:
@@ -32,7 +32,7 @@ jobs:
     needs: dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Biome Check
         run: turbo run check --filter=server
@@ -42,7 +42,7 @@ jobs:
     needs: dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: TypeScript Check
         run: pnpm --filter server exec tsc --noEmit
@@ -70,7 +70,7 @@ jobs:
       GOOGLE_SERVER_CLIENT_ID: "test-client-id"
       GOOGLE_CLIENT_SECRET: "test-client-secret"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Run Tests
         run: turbo run test --filter=server
@@ -80,7 +80,7 @@ jobs:
     needs: [code-quality, typecheck, unit-tests]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Build Server
         run: turbo run build --filter=server

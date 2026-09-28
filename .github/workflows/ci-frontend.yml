@@ -24,7 +24,7 @@ jobs:
     name: 📦 Instalando Dependências
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
 
   code-quality:
@@ -32,7 +32,7 @@ jobs:
     needs: dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Biome Check
         run: turbo run check --filter=native
@@ -42,7 +42,7 @@ jobs:
     needs: dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: TypeScript Check
         run: turbo run check-types --filter=native
@@ -52,7 +52,7 @@ jobs:
     needs: dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Run Tests
         run: turbo run test --filter=native
