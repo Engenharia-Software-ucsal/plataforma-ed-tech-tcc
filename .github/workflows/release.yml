@@ -1,0 +1,55 @@
+name: Release (APK)
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  release:
+    name: 🚀 Gerar Build e Publicar Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Necessário para criar a release
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node & pnpm
+        uses: ./.github/actions/setup
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 EAS Build (Android)
+        id: build
+        working-directory: ./apps/native
+        run: |
+          # O --wait faz a action aguardar o servidor da Expo terminar o build (pode levar 10~20 min)
+          eas build --platform android --profile production --non-interactive --wait --json > build_info.json
+          
+          # Extrai o link de download direto do JSON gerado
+          APK_URL=$(jq -r '.[0].artifacts.buildUrl' build_info.json)
+          echo "APK_URL=$APK_URL" >> $GITHUB_ENV
+          
+          # Baixa o APK
+          wget -O busuucsal.apk "$APK_URL"
+
+      - name: 🏷️ Criar Release no GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} \
+            ./apps/native/busuucsal.apk \
+            --title "Release ${{ github.ref_name }}" \
+            --notes "🎉 Nova versão lançada! 
+            
+            O pacote APK para Android está anexado abaixo para download direto.
+            **Build URL (Expo):** $APK_URL"
