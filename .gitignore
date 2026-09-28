@@ -63,3 +63,4 @@ temp
 graphify-out
 
 *.apk
+__pycache__/
