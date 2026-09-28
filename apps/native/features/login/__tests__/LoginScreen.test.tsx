@@ -1,20 +1,44 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { Provider } from "jotai";
+import { router } from "expo-router";
 import { LoginScreen } from "@/features/login/LoginScreen";
 
+jest.mock("expo-router", () => ({
+	router: {
+		replace: jest.fn(),
+	},
+}));
+
 describe("LoginScreen", () => {
+	beforeEach(() => {
+		jest.clearAllMocks();
+	});
+
 	it("renders the app name and the Google CTA", async () => {
-		await render(<LoginScreen />);
+		await render(
+			<Provider>
+				<LoginScreen />
+			</Provider>
+		);
 		expect(screen.getByText("Compasso UCSAL")).toBeTruthy();
 		expect(screen.getByText("Entrar com conta UCSAL (Google)")).toBeTruthy();
 	});
 
 	it("shows an error message after a failed sign-in", async () => {
+		(router.replace as jest.Mock).mockImplementationOnce(() => {
+			throw new Error("network");
+		});
+
 		await render(
-			<LoginScreen authenticate={() => Promise.reject(new Error("x"))} />,
+			<Provider>
+				<LoginScreen />
+			</Provider>
 		);
+		
 		await act(async () => {
 			fireEvent.press(screen.getByText("Entrar com conta UCSAL (Google)"));
 		});
+		
 		expect(await screen.findByText(/Não foi possível entrar/)).toBeTruthy();
 	});
 });

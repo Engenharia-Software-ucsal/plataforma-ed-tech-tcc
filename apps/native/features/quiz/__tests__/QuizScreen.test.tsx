@@ -2,10 +2,14 @@ import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QuizScreen } from "@/features/quiz/QuizScreen";
 
+import { Provider } from "jotai";
+
 function renderScreen() {
 	return render(
 		<SafeAreaProvider>
-			<QuizScreen />
+			<Provider>
+				<QuizScreen />
+			</Provider>
 		</SafeAreaProvider>,
 	);
 }

@@ -1,20 +1,20 @@
 {
-  "name": "@busuucsal-v3/env",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    "./native": "./src/native.ts",
-    "./server": "./src/server.ts"
-  },
-  "dependencies": {
-    "@t3-oss/env-core": "^0.13.11",
-    "dotenv": "catalog:",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
-    "@busuucsal-v3/config": "workspace:*",
-    "@types/node": "^22.20.1",
-    "typescript": "^6.0.3"
-  }
+	"name": "@busuucsal-v3/env",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./native": "./src/native.ts",
+		"./server": "./src/server.ts"
+	},
+	"dependencies": {
+		"@t3-oss/env-core": "^0.13.11",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@busuucsal-v3/config": "workspace:*",
+		"@types/node": "^22.20.1",
+		"typescript": "^6.0.3"
+	}
 }

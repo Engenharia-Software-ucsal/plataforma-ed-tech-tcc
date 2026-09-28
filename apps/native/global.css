@@ -2,26 +2,26 @@
 @import "uniwind";
 @import "heroui-native/styles";
 
-@source './node_modules/heroui-native/lib';
+@source "./node_modules/heroui-native/lib";
 
 @theme {
-  --color-surface-primary: #0A0A0A;
-  --color-surface-secondary: #141420;
-  --color-foreground-primary: #FFFFFF;
-  --color-foreground-secondary: #C7C7D1;
-  --color-foreground-muted: #A1A1AA;
-  --color-accent-primary: #582CFF;
-  --color-accent-secondary: #BF40FF;
-  --color-accent-tertiary: #00F2FF;
-  --color-accent-light: #582CFF26;
-  --color-border-subtle: #222233;
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
-  --radius-sm-card: 4px;
-  --radius-lg-card: 8px;
-  --font-heading: "Inter";
-  --font-body: "Geist";
-  --font-caption: "FunnelSans";
-  --font-mono: "GeistMono";
+	--color-surface-primary: #0a0a0a;
+	--color-surface-secondary: #141420;
+	--color-foreground-primary: #ffffff;
+	--color-foreground-secondary: #c7c7d1;
+	--color-foreground-muted: #a1a1aa;
+	--color-accent-primary: #582cff;
+	--color-accent-secondary: #bf40ff;
+	--color-accent-tertiary: #00f2ff;
+	--color-accent-light: #582cff26;
+	--color-border-subtle: #222233;
+	--color-success: #10b981;
+	--color-warning: #f59e0b;
+	--color-danger: #ef4444;
+	--radius-sm-card: 4px;
+	--radius-lg-card: 8px;
+	--font-heading: "Inter";
+	--font-body: "Geist";
+	--font-caption: "FunnelSans";
+	--font-mono: "GeistMono";
 }

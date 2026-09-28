@@ -1,28 +1,26 @@
 {
-  "expo": {
-    "scheme": "busuucsal-v3",
-    "userInterfaceStyle": "automatic",
-    "orientation": "default",
-    "web": {
-      "bundler": "metro"
-    },
-    "name": "busuucsal-v3",
-    "slug": "busuucsal-v3",
-    "plugins": [
-      "expo-font"
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    },
-    "android": {
-      "package": "com.anonymous.busuucsalv3"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "bd26616e-7a21-4fa6-9a2e-e275cbe70503"
-      }
-    },
-    "owner": "luminuszz"
-  }
+	"expo": {
+		"scheme": "busuucsal-v3",
+		"userInterfaceStyle": "automatic",
+		"orientation": "default",
+		"web": {
+			"bundler": "metro"
+		},
+		"name": "busuucsal-v3",
+		"slug": "busuucsal-v3",
+		"plugins": ["expo-font"],
+		"experiments": {
+			"typedRoutes": true,
+			"reactCompiler": true
+		},
+		"android": {
+			"package": "com.anonymous.busuucsalv3"
+		},
+		"extra": {
+			"eas": {
+				"projectId": "bd26616e-7a21-4fa6-9a2e-e275cbe70503"
+			}
+		},
+		"owner": "luminuszz"
+	}
 }

@@ -7,7 +7,11 @@ import { IconBadge } from "@/components/atoms/IconBadge";
 import { Container } from "@/components/container";
 import { usePerfilViewModel } from "@/features/perfil/perfil.viewmodel";
 
-export function PerfilScreen({ onSignOut }: { onSignOut?: () => void } = {}) {
+export type PerfilScreenProps = {
+	onSignOut?: () => void;
+};
+
+export const PerfilScreen: React.FC<PerfilScreenProps> = ({ onSignOut }) => {
 	const router = useRouter();
 	const {
 		profile,
@@ -49,7 +53,7 @@ export function PerfilScreen({ onSignOut }: { onSignOut?: () => void } = {}) {
 							</AppText>
 						}
 						tone="accent"
-						className="h-[52px] w-[52px] rounded-lg-card bg-accent-primary"
+						className="h-13 w-13 rounded-lg-card bg-accent-primary"
 					/>
 					<View className="flex-1 gap-0.5">
 						<AppText
@@ -132,4 +136,4 @@ export function PerfilScreen({ onSignOut }: { onSignOut?: () => void } = {}) {
 			</View>
 		</Container>
 	);
-}
+};

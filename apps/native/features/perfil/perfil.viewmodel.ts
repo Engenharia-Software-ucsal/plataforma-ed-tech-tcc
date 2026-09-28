@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { atom, useAtom } from "jotai";
+import { useCallback } from "react";
 import {
 	CONNECTED_ACCOUNTS,
 	CURRENT_USER,
@@ -8,12 +9,16 @@ export type PerfilViewModelDeps = {
 	onSignOut?: () => void;
 };
 
+const notificationsEnabledAtom = atom(true);
+
 export function usePerfilViewModel({ onSignOut }: PerfilViewModelDeps = {}) {
-	const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+	const [notificationsEnabled, setNotificationsEnabled] = useAtom(
+		notificationsEnabledAtom,
+	);
 
 	const toggleNotifications = useCallback(() => {
 		setNotificationsEnabled((current) => !current);
-	}, []);
+	}, [setNotificationsEnabled]);
 
 	const signOut = useCallback(() => {
 		onSignOut?.();
