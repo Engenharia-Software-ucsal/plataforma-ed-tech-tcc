@@ -10,38 +10,53 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    
     env:
       DATABASE_URL: "postgres://test:test@localhost:5432/test"
       GOOGLE_SERVER_CLIENT_ID: "test-client-id"
       GOOGLE_CLIENT_SECRET: "test-client-secret"
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 11.10.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
+      - run: pnpm install --frozen-lockfile
       - name: Run backend tests
         run: pnpm --filter server run test
-
       - name: Run frontend tests
         run: pnpm --filter native run test
 
+  build:
+    name: Build Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - name: Build backend
         run: pnpm --filter server run build
 
+  typecheck:
+    name: Typecheck Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - name: Typecheck frontend
         run: pnpm --filter native exec tsc --noEmit
