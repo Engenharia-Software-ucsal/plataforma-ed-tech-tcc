@@ -1,7 +1,8 @@
 name: Expo Deploy & Update
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - master
     paths:
@@ -24,6 +25,7 @@ on:
 jobs:
   expo-deploy:
     name: 🚀 Deploy Expo (EAS)
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: 🏗 Setup repo
@@ -39,7 +41,7 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 🚀 Publicar OTA Update (Production)
-        if: github.event_name == 'push' || github.event.inputs.action == 'update'
+        if: github.event_name == 'pull_request' || github.event.inputs.action == 'update'
         working-directory: ./apps/native
         run: eas update --auto --non-interactive
 
