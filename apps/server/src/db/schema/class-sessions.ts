@@ -37,3 +37,6 @@ export const classSessions = pgTable("class_sessions", {
 		.notNull()
 		.defaultNow(),
 });
+
+export type ClassSession = typeof classSessions.$inferSelect;
+export type NewClassSession = typeof classSessions.$inferInsert;

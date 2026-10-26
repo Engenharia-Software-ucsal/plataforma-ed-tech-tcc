@@ -11,3 +11,6 @@ export const sessions = pgTable("sessions", {
 		.notNull()
 		.defaultNow(),
 });
+
+export type Session = typeof sessions.$inferSelect;
+export type NewSession = typeof sessions.$inferInsert;
