@@ -1,10 +1,12 @@
-import { useRouter } from "expo-router";
+import { type Href, useRouter } from "expo-router";
 import {
 	ChevronLeft,
 	Clock3,
 	Download,
 	GraduationCap,
+	Lightbulb,
 	MapPin,
+	PenLine,
 	User,
 } from "lucide-react-native";
 import { Pressable, View } from "react-native";
@@ -131,12 +133,55 @@ export function AulaDetalhesScreen() {
 						/>
 					</View>
 				) : (
-					<InsightCard
-						summary={data.insightSummary}
-						coverageText={data.insightCoverage}
-						points={data.insightPoints}
-						onGenerateQuiz={() => router.push("/quiz")}
-					/>
+					<View className="gap-4">
+						<View
+							testID="anti-offloading-banner"
+							className="gap-3 rounded-lg-card border border-warning/40 bg-warning/10 p-4"
+						>
+							<View className="flex-row items-start gap-2.5">
+								<Lightbulb size={18} color="#F59E0B" className="mt-0.5" />
+								<View className="flex-1 gap-1">
+									<AppText
+										variant="caption"
+										tone="warning"
+										className="font-bold text-xs uppercase tracking-wider"
+									>
+										Pausa Reflexiva Anti-Offloading
+									</AppText>
+									<AppText
+										variant="body"
+										tone="secondary"
+										className="text-xs leading-relaxed"
+									>
+										Antes de consultar os resumos da IA, registre suas próprias
+										anotações na aba Notas para consolidar os esquemas mentais e
+										evitar o cognitive offloading.
+									</AppText>
+								</View>
+							</View>
+							<AppButton
+								label="Criar Nota desta Aula"
+								variant="outline"
+								onPress={() =>
+									router.push(
+										`/nota-detalhes?classSessionId=${data.id}` as Href,
+									)
+								}
+								icon={<PenLine size={14} color="#FFFFFF" />}
+							/>
+						</View>
+
+						{data.insights.map((insight) => (
+							<InsightCard
+								key={insight.id}
+								summary={insight.summary}
+								coverageText={insight.coverageText}
+								points={insight.points}
+								sourceReference={insight.sourceReference}
+								onGenerateQuiz={() => router.push("/quiz")}
+							/>
+						))}
+					</View>
 				)}
 			</View>
 		</Container>

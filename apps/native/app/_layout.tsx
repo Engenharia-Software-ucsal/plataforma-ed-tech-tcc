@@ -23,6 +23,7 @@ function StackLayout() {
 			<Stack.Screen name="(tabs)" />
 			<Stack.Screen name="perfil" />
 			<Stack.Screen name="aula-detalhes" />
+			<Stack.Screen name="nota-detalhes" />
 			<Stack.Screen name="quiz" />
 			<Stack.Screen name="quiz-resultado" />
 			<Stack.Screen name="notificacoes" />

@@ -1,10 +1,10 @@
 import { Tabs } from "expo-router";
-import { BookOpen, Bus } from "lucide-react-native";
+import { BookOpen, FileText } from "lucide-react-native";
 
 export default function TabLayout() {
 	return (
 		<Tabs
-			initialRouteName="onibus"
+			initialRouteName="aulas"
 			screenOptions={{
 				headerShown: false,
 				tabBarActiveTintColor: "#582CFF",
@@ -13,18 +13,20 @@ export default function TabLayout() {
 			}}
 		>
 			<Tabs.Screen
-				name="onibus"
-				options={{
-					title: "Ônibus",
-					tabBarIcon: ({ color, size }) => <Bus size={size} color={color} />,
-				}}
-			/>
-			<Tabs.Screen
 				name="aulas"
 				options={{
 					title: "Aulas",
 					tabBarIcon: ({ color, size }) => (
 						<BookOpen size={size} color={color} />
+					),
+				}}
+			/>
+			<Tabs.Screen
+				name="notas"
+				options={{
+					title: "Notas",
+					tabBarIcon: ({ color, size }) => (
+						<FileText size={size} color={color} />
 					),
 				}}
 			/>

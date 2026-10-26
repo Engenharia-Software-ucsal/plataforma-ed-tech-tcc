@@ -1,3 +1,6 @@
+process.env.EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID =
+	process.env.EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID || "mock-google-client-id";
+
 jest.mock(
 	"react-native-safe-area-context",
 	() => require("react-native-safe-area-context/jest/mock").default,

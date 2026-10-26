@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from "@testing-library/react-native";
+import { act, renderHook } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { Provider } from "jotai";
 import { useLoginViewModel } from "@/features/login/login.viewmodel";
@@ -30,7 +30,7 @@ describe("useLoginViewModel", () => {
 			await result.current.signInWithGoogle();
 		});
 
-		expect(router.replace).toHaveBeenCalledWith("/(tabs)/onibus");
+		expect(router.replace).toHaveBeenCalledWith("/(tabs)/aulas");
 		expect(result.current.status).toBe("idle");
 	});
 

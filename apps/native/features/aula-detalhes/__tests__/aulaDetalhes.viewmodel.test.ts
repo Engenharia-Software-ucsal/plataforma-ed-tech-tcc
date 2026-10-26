@@ -18,11 +18,15 @@ describe("useAulaDetalhesViewModel", () => {
 		expect(result.current.activeTab).toBe("ia");
 	});
 
-	it("exposes the mock class data", async () => {
+	it("exposes the mock class data with source references on insights", async () => {
 		const { result } = await renderHook(() => useAulaDetalhesViewModel(), {
 			wrapper: Provider,
 		});
 		expect(result.current.data.subject).toBe("Engenharia de Software");
 		expect(result.current.data.files.length).toBeGreaterThan(0);
+		expect(result.current.data.insights.length).toBeGreaterThan(0);
+		for (const insight of result.current.data.insights) {
+			expect(insight.sourceReference).toBeTruthy();
+		}
 	});
 });

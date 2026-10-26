@@ -20,6 +20,22 @@ describe("InsightCard", () => {
 		for (const point of props.points) {
 			expect(screen.getByText(point)).toBeTruthy();
 		}
+		expect(screen.queryByTestId("source-reference-badge")).toBeNull();
+	});
+
+	it("renders source reference badge when sourceReference is provided", async () => {
+		const onPressReference = jest.fn();
+		await render(
+			<InsightCard
+				{...props}
+				sourceReference="Slide 14"
+				onPressReference={onPressReference}
+			/>,
+		);
+		const badge = screen.getByText("Fonte: Slide 14");
+		expect(badge).toBeTruthy();
+		fireEvent.press(badge);
+		expect(onPressReference).toHaveBeenCalledTimes(1);
 	});
 
 	it("calls onGenerateQuiz when the quiz button is pressed", async () => {

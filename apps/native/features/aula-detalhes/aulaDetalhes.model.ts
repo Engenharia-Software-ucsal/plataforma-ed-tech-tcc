@@ -6,7 +6,16 @@ export type ClassroomFile = {
 	badge?: "novo" | "lido";
 };
 
+export type InsightItem = {
+	id: string;
+	summary: string;
+	coverageText: string;
+	points: string[];
+	sourceReference: string;
+};
+
 export type AulaDetalhesData = {
+	id: string;
 	subject: string;
 	professor: string;
 	schedule: string;
@@ -14,12 +23,11 @@ export type AulaDetalhesData = {
 	topics: string[];
 	syncedAgo: string;
 	files: ClassroomFile[];
-	insightSummary: string;
-	insightCoverage: string;
-	insightPoints: string[];
+	insights: InsightItem[];
 };
 
 export const AULA_DETALHES_MOCK: AulaDetalhesData = {
+	id: "aula-eng-soft-04",
 	subject: "Engenharia de Software",
 	professor: "Prof. Ana Silva",
 	schedule: "08:00 - 09:30",
@@ -54,12 +62,29 @@ export const AULA_DETALHES_MOCK: AulaDetalhesData = {
 			iconName: "link",
 		},
 	],
-	insightSummary:
-		"IA analisou os slides e a gravação enviados pelo professor no Classroom e extraiu os pontos abaixo.",
-	insightCoverage: "Baseado em 2 de 4 materiais analisados",
-	insightPoints: [
-		"Princípios SOLID aplicados a microsserviços, extraídos dos slides",
-		"Padrão Circuit Breaker citado nos slides (pág. 14)",
-		"3 exercícios recomendados com base na Lista de Exercícios.xlsx",
+	insights: [
+		{
+			id: "ins-01",
+			summary:
+				"IA analisou os slides e a gravação enviados pelo professor no Classroom e extraiu os pontos abaixo.",
+			coverageText: "Baseado em 2 de 4 materiais analisados",
+			points: [
+				"Princípios SOLID aplicados a microsserviços, extraídos dos slides",
+				"Padrão Circuit Breaker citado nos slides (pág. 14)",
+				"3 exercícios recomendados com base na Lista de Exercícios.xlsx",
+			],
+			sourceReference: "Slide 08 - Arquitetura de Software",
+		},
+		{
+			id: "ins-02",
+			summary:
+				"Conceitos de resiliência e isolamento de falhas para sistemas distribuídos de alta disponibilidade.",
+			coverageText: "Baseado na apostila complementar",
+			points: [
+				"Padrão Bulkhead para evitar cascata de falhas em microsserviços",
+				"Políticas de Retry com jitter e exponenciação para recuperação graciosa",
+			],
+			sourceReference: "Apostila p. 12",
+		},
 	],
 };

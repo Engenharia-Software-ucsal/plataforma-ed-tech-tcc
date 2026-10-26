@@ -8,15 +8,23 @@ import * as SecureStore from "expo-secure-store";
 import { atom } from "jotai";
 import { trpc } from "@/utils/trpc";
 
-GoogleSignin.configure({
-	webClientId: process.env.EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID,
-	offlineAccess: true,
-	forceCodeForRefreshToken: true,
-	scopes: [
-		"https://www.googleapis.com/auth/classroom.courses.readonly",
-		"https://www.googleapis.com/auth/drive.readonly",
-	],
-});
+// Only configure Google Signin if the Client ID is provided
+if (process.env.EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID) {
+	GoogleSignin.configure({
+		webClientId: process.env.EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID,
+		offlineAccess: true,
+		forceCodeForRefreshToken: true,
+		scopes: [
+			"https://www.googleapis.com/auth/classroom.courses.readonly",
+			"https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly",
+			"https://www.googleapis.com/auth/classroom.coursework.me.readonly",
+			"https://www.googleapis.com/auth/classroom.announcements.readonly",
+			"https://www.googleapis.com/auth/classroom.topics.readonly",
+		],
+	});
+} else {
+	console.warn("⚠️ EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID is not set! Google Auth will fail.");
+}
 
 export type AuthStatus = "idle" | "authenticating" | "error";
 
@@ -26,6 +34,13 @@ export const errorAtom = atom<string | null>(null);
 export const authenticateAtomAction = atom(null, async (_, set) => {
 	set(statusAtom, "authenticating");
 	set(errorAtom, null);
+	
+	if (!process.env.EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID) {
+	    set(statusAtom, "error");
+	    set(errorAtom, "Configuração do Google ausente (Missing Client ID).");
+	    return;
+	}
+
 	try {
 		await GoogleSignin.hasPlayServices();
 		const response = await GoogleSignin.signIn();
@@ -40,7 +55,7 @@ export const authenticateAtomAction = atom(null, async (_, set) => {
 
 		await SecureStore.setItemAsync("session_id", result.sessionId);
 		set(statusAtom, "idle");
-		router.replace("/(tabs)/onibus");
+		router.replace("/(tabs)/aulas");
 	} catch (err: any) {
 		console.error("Google Signin Error:", err, "Code:", err?.code);
 		set(statusAtom, "error");
