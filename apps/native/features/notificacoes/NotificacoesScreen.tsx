@@ -1,9 +1,9 @@
 import { useRouter } from "expo-router";
+import { useAtomValue } from "jotai";
 import {
 	ChevronLeft,
 	Gauge,
 	GraduationCap,
-	Navigation,
 	Sparkles,
 	TriangleAlert,
 } from "lucide-react-native";
@@ -11,10 +11,8 @@ import { Pressable, View } from "react-native";
 import { AppText } from "@/components/atoms/AppText";
 import { Container } from "@/components/container";
 import { NotificationRow } from "@/components/molecules/NotificationRow";
-import {
-	NOTIFICATIONS_MOCK,
-	type NotificationIconName,
-} from "@/features/notificacoes/notificacoes.model";
+import type { NotificationIconName } from "@/features/notificacoes/notificacoes.model";
+import { classroomNotificationsAtom } from "@/state/classroom";
 
 const ICON_COLOR: Record<string, string> = {
 	accent: "#582CFF",
@@ -24,8 +22,6 @@ const ICON_COLOR: Record<string, string> = {
 
 function iconFor(name: NotificationIconName, color: string) {
 	switch (name) {
-		case "navigation":
-			return <Navigation size={16} color={color} />;
 		case "sparkles":
 			return <Sparkles size={16} color={color} />;
 		case "triangle-alert":
@@ -39,6 +35,8 @@ function iconFor(name: NotificationIconName, color: string) {
 
 export function NotificacoesScreen() {
 	const router = useRouter();
+	const notifications = useAtomValue(classroomNotificationsAtom);
+
 	return (
 		<Container className="bg-surface-primary">
 			<View className="gap-5 p-5">
@@ -60,7 +58,7 @@ export function NotificacoesScreen() {
 				</View>
 
 				<View className="gap-2.5">
-					{NOTIFICATIONS_MOCK.map((notification) => (
+					{notifications.map((notification) => (
 						<NotificationRow
 							key={notification.id}
 							icon={iconFor(

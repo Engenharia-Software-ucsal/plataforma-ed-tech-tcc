@@ -22,6 +22,19 @@ describe("usePerfilViewModel", () => {
 		expect(result.current.notificationsEnabled).toBe(false);
 	});
 
+	it("triggers Classroom sync via syncClassroom", async () => {
+		const { result } = await renderHook(() => usePerfilViewModel(), {
+			wrapper: Provider,
+		});
+		await act(async () => {
+			await result.current.syncClassroom();
+		});
+		expect(result.current.syncStatus).toBe("synced");
+		expect(result.current.lastSyncedAt).toBe(
+			"Sincronizado com Classroom agora",
+		);
+	});
+
 	it("calls the injected sign-out callback", async () => {
 		const onSignOut = jest.fn();
 		const { result } = await renderHook(

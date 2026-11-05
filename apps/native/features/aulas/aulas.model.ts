@@ -8,6 +8,7 @@ export type ClassDifficulty = {
 
 export type ClassSession = {
 	id: string;
+	semester?: string;
 	startTime: string;
 	endTime: string;
 	subject: string;
@@ -19,6 +20,7 @@ export type ClassSession = {
 export const CLASS_SESSIONS: ClassSession[] = [
 	{
 		id: "class-eng-sw",
+		semester: "2026.2",
 		startTime: "08:00",
 		endTime: "09:30",
 		subject: "Engenharia de Software",
@@ -28,6 +30,7 @@ export const CLASS_SESSIONS: ClassSession[] = [
 	},
 	{
 		id: "class-bd2",
+		semester: "2026.2",
 		startTime: "10:00",
 		endTime: "11:30",
 		subject: "Banco de Dados II",
@@ -37,6 +40,7 @@ export const CLASS_SESSIONS: ClassSession[] = [
 	},
 	{
 		id: "class-redes",
+		semester: "2026.2",
 		startTime: "13:00",
 		endTime: "14:30",
 		subject: "Redes de Computadores",
@@ -46,6 +50,7 @@ export const CLASS_SESSIONS: ClassSession[] = [
 	},
 	{
 		id: "class-ia",
+		semester: "2026.2",
 		startTime: "15:00",
 		endTime: "16:30",
 		subject: "Inteligência Artificial",
@@ -55,11 +60,32 @@ export const CLASS_SESSIONS: ClassSession[] = [
 	},
 	{
 		id: "class-projeto",
+		semester: "2026.2",
 		startTime: "17:00",
 		endTime: "18:30",
 		subject: "Projeto Integrador",
 		professor: "Prof. Renata Costa",
 		room: "Sala 510 · BL-D-510",
 		difficulty: { level: "facil", score: 2.0, reviewCount: 38 },
+	},
+	{
+		id: "class-ed-2026-1",
+		semester: "2026.1",
+		startTime: "08:00",
+		endTime: "09:30",
+		subject: "Estrutura de Dados",
+		professor: "Prof. Marcos Oliveira",
+		room: "Sala 204 · BL-A-204",
+		difficulty: { level: "medio", score: 3.6, reviewCount: 84 },
+	},
+	{
+		id: "class-arq-comp-2026-1",
+		semester: "2026.1",
+		startTime: "10:00",
+		endTime: "11:30",
+		subject: "Arquitetura de Computadores",
+		professor: "Prof. Roberto Mendes",
+		room: "Lab 102 · BL-B-102",
+		difficulty: { level: "medio", score: 3.4, reviewCount: 72 },
 	},
 ];

@@ -1,3 +1,4 @@
+import * as ExpoRouter from "expo-router";
 import { type Href, useRouter } from "expo-router";
 import {
 	ChevronLeft,
@@ -9,7 +10,8 @@ import {
 	PenLine,
 	User,
 } from "lucide-react-native";
-import { Pressable, View } from "react-native";
+import { useState } from "react";
+import { Pressable, TextInput, View } from "react-native";
 import { AppButton } from "@/components/atoms/AppButton";
 import { AppText } from "@/components/atoms/AppText";
 import { Chip } from "@/components/atoms/Chip";
@@ -28,7 +30,38 @@ const FILE_ICON: Record<string, React.ReactNode> = {
 
 export function AulaDetalhesScreen() {
 	const router = useRouter();
-	const { data, activeTab, setActiveTab } = useAulaDetalhesViewModel();
+	const params =
+		typeof ExpoRouter.useLocalSearchParams === "function"
+			? ExpoRouter.useLocalSearchParams<{ id?: string }>()
+			: {};
+	const { data, activeTab, setActiveTab, openMaterial, updateSchedule } =
+		useAulaDetalhesViewModel(params?.id);
+
+	const [isEditingSchedule, setIsEditingSchedule] = useState(false);
+	const [startTimeInput, setStartTimeInput] = useState(
+		data.schedule.split(" - ")[0] ?? "08:00",
+	);
+	const [endTimeInput, setEndTimeInput] = useState(
+		data.schedule.split(" - ")[1] ?? "09:30",
+	);
+	const [roomInput, setRoomInput] = useState(data.room);
+
+	const handleOpenEditSchedule = () => {
+		const [start, end] = data.schedule.split(" - ");
+		setStartTimeInput(start ?? "08:00");
+		setEndTimeInput(end ?? "09:30");
+		setRoomInput(data.room);
+		setIsEditingSchedule((prev) => !prev);
+	};
+
+	const handleSaveSchedule = async () => {
+		await updateSchedule({
+			startTime: startTimeInput.trim() || "08:00",
+			endTime: endTimeInput.trim() || "09:30",
+			room: roomInput.trim() || data.room,
+		});
+		setIsEditingSchedule(false);
+	};
 
 	return (
 		<Container className="bg-surface-primary">
@@ -77,8 +110,70 @@ export function AulaDetalhesScreen() {
 								{data.room}
 							</AppText>
 						</View>
+						<Pressable
+							testID="edit-schedule-button"
+							onPress={handleOpenEditSchedule}
+							className="flex-row items-center gap-1 rounded-sm-card border border-border-subtle bg-surface-secondary px-2 py-1"
+						>
+							<PenLine size={11} color="#582CFF" />
+							<AppText
+								variant="caption"
+								tone="primary"
+								className="font-medium text-[11px]"
+							>
+								Editar horário/sala
+							</AppText>
+						</Pressable>
 					</View>
-					<View className="flex-row gap-1.5">
+
+					{isEditingSchedule && (
+						<View
+							testID="schedule-edit-modal"
+							className="gap-2.5 rounded-lg-card border border-border-subtle bg-surface-secondary p-3.5"
+						>
+							<View className="flex-row gap-2">
+								<TextInput
+									testID="input-start-time"
+									value={startTimeInput}
+									onChangeText={setStartTimeInput}
+									placeholder="Início (ex: 08:00)"
+									placeholderTextColor="#71717A"
+									className="flex-1 rounded-sm-card border border-border-subtle bg-surface-primary px-3 py-2 text-text-primary text-xs"
+								/>
+								<TextInput
+									testID="input-end-time"
+									value={endTimeInput}
+									onChangeText={setEndTimeInput}
+									placeholder="Fim (ex: 09:30)"
+									placeholderTextColor="#71717A"
+									className="flex-1 rounded-sm-card border border-border-subtle bg-surface-primary px-3 py-2 text-text-primary text-xs"
+								/>
+							</View>
+							<TextInput
+								testID="input-room"
+								value={roomInput}
+								onChangeText={setRoomInput}
+								placeholder="Sala / Bloco"
+								placeholderTextColor="#71717A"
+								className="rounded-sm-card border border-border-subtle bg-surface-primary px-3 py-2 text-text-primary text-xs"
+							/>
+							<Pressable
+								testID="save-schedule-button"
+								onPress={handleSaveSchedule}
+								className="items-center rounded-sm-card bg-accent-primary py-2"
+							>
+								<AppText
+									variant="caption"
+									tone="primary"
+									className="font-semibold text-xs"
+								>
+									Salvar horário
+								</AppText>
+							</Pressable>
+						</View>
+					)}
+
+					<View className="flex-row flex-wrap gap-1.5">
 						{data.topics.map((topic) => (
 							<Chip key={topic} label={topic} tone="accent" />
 						))}
@@ -118,17 +213,23 @@ export function AulaDetalhesScreen() {
 							{data.files.map((file) => (
 								<FileRow
 									key={file.id}
+									testID={`file-row-${file.id}`}
 									icon={FILE_ICON[file.iconName]}
 									name={file.name}
 									meta={file.meta}
 									badge={file.badge}
+									onPress={() => openMaterial(file)}
 								/>
 							))}
 						</View>
 						<AppButton
 							label="Baixar todos os materiais"
 							variant="outline"
-							onPress={() => {}}
+							onPress={() => {
+								if (data.files[0]) {
+									openMaterial(data.files[0]);
+								}
+							}}
 							icon={<Download size={14} color="#FFFFFF" />}
 						/>
 					</View>
