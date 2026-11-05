@@ -1,16 +1,26 @@
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { classSessions } from "../db/schema/index.js";
+import { classSessions, courseMaterials } from "../db/schema/index.js";
+import { syncClassroomForUser } from "../services/classroom.service.js";
 import { publicProcedure, router } from "../trpc/index.js";
 
 export const classRouter = router({
-	list: publicProcedure.query(async ({ ctx }) => {
-		return ctx.db.select().from(classSessions).orderBy(classSessions.startTime);
-	}),
+	list: publicProcedure
+		.input(z.object({ semester: z.string().optional() }).optional())
+		.query(async ({ ctx, input }) => {
+			if (input?.semester && input.semester !== "todos") {
+				return ctx.db
+					.select()
+					.from(classSessions)
+					.where(eq(classSessions.semester, input.semester))
+					.orderBy(classSessions.startTime);
+			}
+			return ctx.db.select().from(classSessions).orderBy(classSessions.startTime);
+		}),
 
 	byId: publicProcedure
-		.input(z.object({ id: z.string().uuid() }))
+		.input(z.object({ id: z.string().min(1) }))
 		.query(async ({ ctx, input }) => {
 			const [session] = await ctx.db
 				.select()
@@ -22,7 +32,16 @@ export const classRouter = router({
 					message: "Class session not found",
 				});
 			}
-			return session;
+
+			const materials = await ctx.db
+				.select()
+				.from(courseMaterials)
+				.where(eq(courseMaterials.classSessionId, session.id));
+
+			return {
+				...session,
+				materials,
+			};
 		}),
 
 	create: publicProcedure
@@ -33,6 +52,7 @@ export const classRouter = router({
 				subject: z.string(),
 				professor: z.string(),
 				room: z.string(),
+				topics: z.array(z.string()).optional(),
 				difficultyLevel: z.enum(["facil", "medio", "dificil"]).default("medio"),
 				difficultyScore: z.string().default("0.0"),
 				difficultyReviewCount: z.number().int().nonnegative().default(0),
@@ -45,4 +65,110 @@ export const classRouter = router({
 				.returning();
 			return created;
 		}),
+
+	syncFromClassroom: publicProcedure.mutation(async ({ ctx }) => {
+		const syncResult = await syncClassroomForUser({
+			db: ctx.db,
+			refreshToken: ctx.user?.googleRefreshToken ?? null,
+		});
+		const sessions = await ctx.db
+			.select()
+			.from(classSessions)
+			.orderBy(classSessions.startTime);
+		const allMaterials = await ctx.db.select().from(courseMaterials);
+
+		const courses = sessions.map((c) => ({
+			...c,
+			materials: allMaterials.filter((m) => m.classSessionId === c.id),
+		}));
+
+		return {
+			...syncResult,
+			courses,
+		};
+	}),
+
+	updateSchedule: publicProcedure
+		.input(
+			z.object({
+				id: z.string().min(1),
+				startTime: z.string().min(1),
+				endTime: z.string().min(1),
+				room: z.string().min(1),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			const [updated] = await ctx.db
+				.update(classSessions)
+				.set({
+					startTime: input.startTime,
+					endTime: input.endTime,
+					room: input.room,
+					updatedAt: new Date(),
+				})
+				.where(eq(classSessions.id, input.id))
+				.returning();
+
+			if (!updated) {
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "Class session not found",
+				});
+			}
+
+			return updated;
+		}),
+
+	notifications: publicProcedure.query(async ({ ctx }) => {
+		const sessions = await ctx.db.select().from(classSessions);
+		const materials = await ctx.db.select().from(courseMaterials);
+
+		const sessionMap = new Map(sessions.map((s) => [s.id, s]));
+
+		return materials.map((mat, index) => {
+			const session = sessionMap.get(mat.classSessionId);
+			const subject = session?.subject ?? "Disciplina UCSAL";
+			const professor = session?.professor ?? "Docente UCSAL";
+
+			if (mat.materialType === "announcement") {
+				return {
+					id: mat.id,
+					iconName: "graduation-cap" as const,
+					iconTone: "accent" as const,
+					title: mat.title,
+					description: mat.summary ?? `${professor} publicou um aviso em ${subject}`,
+					timeAgo: index === 0 ? "agora" : `${index * 15} min`,
+					read: false,
+					materialType: mat.materialType,
+					classSessionId: mat.classSessionId,
+				};
+			}
+
+			if (mat.materialType === "assignment") {
+				return {
+					id: mat.id,
+					iconName: "triangle-alert" as const,
+					iconTone: "warning" as const,
+					title: "Nova atividade no Classroom",
+					description: `${subject}: ${mat.title}`,
+					timeAgo: "1h",
+					read: false,
+					materialType: mat.materialType,
+					classSessionId: mat.classSessionId,
+				};
+			}
+
+			return {
+				id: mat.id,
+				iconName: "sparkles" as const,
+				iconTone: "accent" as const,
+				title: "Novo material sincronizado",
+				description: `${professor} enviou ${mat.title} (${subject})`,
+				timeAgo: "2h",
+				read: index > 2,
+				materialType: mat.materialType,
+				classSessionId: mat.classSessionId,
+			};
+		});
+	}),
 });

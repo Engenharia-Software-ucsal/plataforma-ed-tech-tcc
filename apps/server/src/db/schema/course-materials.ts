@@ -1,8 +1,9 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { classSessions } from "./class-sessions.js";
 
 export const courseMaterials = pgTable("course_materials", {
 	id: uuid("id").primaryKey().defaultRandom(),
+	googleMaterialId: varchar("google_material_id", { length: 255 }).unique(),
 	classSessionId: uuid("class_session_id")
 		.notNull()
 		.references(() => classSessions.id, { onDelete: "cascade" }),

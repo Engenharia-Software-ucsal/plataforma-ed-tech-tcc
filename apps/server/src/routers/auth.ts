@@ -4,11 +4,21 @@ import { authenticateWithGoogle } from "../services/auth.service.js";
 import { publicProcedure, router } from "../trpc/index.js";
 
 export const authRouter = router({
+	me: publicProcedure.query(({ ctx }) => ctx.user ?? null),
+
 	loginWithGoogle: publicProcedure
-		.input(z.object({ serverAuthCode: z.string() }))
+		.input(
+			z.object({
+				serverAuthCode: z.string(),
+				idToken: z.string().optional(),
+			}),
+		)
 		.mutation(async ({ input }) => {
 			try {
-				return await authenticateWithGoogle(input.serverAuthCode);
+				return await authenticateWithGoogle(
+					input.serverAuthCode,
+					input.idToken,
+				);
 			} catch (err: unknown) {
 				if (err instanceof Error && err.message === "UNAUTHORIZED_DOMAIN") {
 					throw new TRPCError({
@@ -16,9 +26,11 @@ export const authRouter = router({
 						message: "Use seu e-mail @ucsal.edu.br",
 					});
 				}
+				console.error("[auth.loginWithGoogle]", err);
 				throw new TRPCError({
 					code: "INTERNAL_SERVER_ERROR",
 					message: "Falha na autenticação",
+					cause: err,
 				});
 			}
 		}),

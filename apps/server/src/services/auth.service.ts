@@ -8,11 +8,29 @@ import { sessions, users } from "../db/schema/index.js";
 const client = new OAuth2Client(
 	env.GOOGLE_SERVER_CLIENT_ID,
 	env.GOOGLE_CLIENT_SECRET,
-	"postmessage",
 );
 
-export async function authenticateWithGoogle(code: string) {
-	const { tokens } = await client.getToken(code);
+export async function authenticateWithGoogle(
+	code: string,
+	fallbackIdToken?: string,
+) {
+	const isJwtIdToken = code.split(".").length === 3;
+	let tokens: { id_token?: string | null; refresh_token?: string | null };
+
+	if (isJwtIdToken) {
+		tokens = { id_token: code, refresh_token: undefined };
+	} else {
+		try {
+			tokens = (await client.getToken(code)).tokens;
+		} catch (err) {
+			if (fallbackIdToken) {
+				tokens = { id_token: fallbackIdToken, refresh_token: undefined };
+			} else {
+				throw err;
+			}
+		}
+	}
+
 	const ticket = await client.verifyIdToken({
 		idToken: tokens.id_token!,
 		audience: env.GOOGLE_SERVER_CLIENT_ID,
