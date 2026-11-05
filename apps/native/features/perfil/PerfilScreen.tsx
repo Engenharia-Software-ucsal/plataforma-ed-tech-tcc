@@ -1,5 +1,11 @@
 import { useRouter } from "expo-router";
-import { Bell, ChevronLeft, GraduationCap, LogOut } from "lucide-react-native";
+import {
+	Bell,
+	ChevronLeft,
+	GraduationCap,
+	LogOut,
+	RefreshCw,
+} from "lucide-react-native";
 import { Pressable, View } from "react-native";
 import { AppButton } from "@/components/atoms/AppButton";
 import { AppText } from "@/components/atoms/AppText";
@@ -19,6 +25,9 @@ export const PerfilScreen: React.FC<PerfilScreenProps> = ({ onSignOut }) => {
 		notificationsEnabled,
 		toggleNotifications,
 		signOut,
+		syncStatus,
+		lastSyncedAt,
+		syncClassroom,
 	} = usePerfilViewModel({ onSignOut });
 
 	return (
@@ -97,7 +106,32 @@ export const PerfilScreen: React.FC<PerfilScreenProps> = ({ onSignOut }) => {
 								<AppText variant="body" tone="success" className="text-[11px]">
 									Conectado
 								</AppText>
+								{lastSyncedAt && (
+									<AppText
+										variant="caption"
+										tone="muted"
+										className="text-[11px]"
+									>
+										{lastSyncedAt}
+									</AppText>
+								)}
 							</View>
+							<Pressable
+								testID="perfil-sync-classroom-button"
+								onPress={() => syncClassroom()}
+								className="flex-row items-center gap-1 rounded-sm-card border border-border-subtle bg-surface-primary px-2.5 py-1.5"
+							>
+								<RefreshCw size={12} color="#582CFF" />
+								<AppText
+									variant="caption"
+									tone="primary"
+									className="font-semibold text-[11px]"
+								>
+									{syncStatus === "syncing"
+										? "Sincronizando..."
+										: "Sincronizar"}
+								</AppText>
+							</Pressable>
 						</View>
 					))}
 				</View>

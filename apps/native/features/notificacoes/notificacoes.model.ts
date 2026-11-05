@@ -1,5 +1,4 @@
 export type NotificationIconName =
-	| "navigation"
 	| "sparkles"
 	| "triangle-alert"
 	| "graduation-cap"
@@ -18,10 +17,10 @@ export type NotificationItem = {
 export const NOTIFICATIONS_MOCK: NotificationItem[] = [
 	{
 		id: "n1",
-		iconName: "navigation",
+		iconName: "graduation-cap",
 		iconTone: "accent",
-		title: "Ônibus a 5 min",
-		description: "Chegando no ponto UCSAL",
+		title: "Novo aviso no Classroom",
+		description: "Prof. Ana Silva publicou aviso sobre a entrega da Sprint 2",
 		timeAgo: "agora",
 		read: false,
 	},
@@ -38,8 +37,9 @@ export const NOTIFICATIONS_MOCK: NotificationItem[] = [
 		id: "n3",
 		iconName: "triangle-alert",
 		iconTone: "warning",
-		title: "Ônibus atrasado",
-		description: "Linha UCSAL → Pituaçu, 08:30 com atraso de 5 min",
+		title: "Nova atividade no Classroom",
+		description:
+			"Lista Prática de Normalização 3FN postada em Banco de Dados II",
 		timeAgo: "1h",
 		read: true,
 	},

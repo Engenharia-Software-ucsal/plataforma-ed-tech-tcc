@@ -4,6 +4,7 @@ export type ClassroomFile = {
 	meta: string;
 	iconName: "file-text" | "file-spreadsheet" | "video" | "link";
 	badge?: "novo" | "lido";
+	fileUrl?: string;
 };
 
 export type InsightItem = {
@@ -41,12 +42,14 @@ export const AULA_DETALHES_MOCK: AulaDetalhesData = {
 			meta: "2.4 MB · PDF",
 			iconName: "file-text",
 			badge: "novo",
+			fileUrl: "https://classroom.google.com/c/ucsal-eng-sw/m/slides-aula-04",
 		},
 		{
 			id: "f2",
 			name: "Lista de Exercícios.xlsx",
 			meta: "180 KB · Planilha",
 			iconName: "file-spreadsheet",
+			fileUrl: "https://classroom.google.com/c/ucsal-eng-sw/a/lista-exercicios",
 		},
 		{
 			id: "f3",
@@ -54,12 +57,14 @@ export const AULA_DETALHES_MOCK: AulaDetalhesData = {
 			meta: "320 MB · Vídeo",
 			iconName: "video",
 			badge: "novo",
+			fileUrl: "https://classroom.google.com/c/ucsal-eng-sw/m/gravacao-aula-04",
 		},
 		{
 			id: "f4",
 			name: "Repositório do Projeto",
 			meta: "github.com/ucsal",
 			iconName: "link",
+			fileUrl: "https://github.com/ucsal",
 		},
 	],
 	insights: [

@@ -29,4 +29,25 @@ describe("useAulaDetalhesViewModel", () => {
 			expect(insight.sourceReference).toBeTruthy();
 		}
 	});
+
+	it("loads details for a specific classId and updates schedule", async () => {
+		const { result } = await renderHook(
+			() => useAulaDetalhesViewModel("class-bd2"),
+			{
+				wrapper: Provider,
+			},
+		);
+		expect(result.current.data.subject).toBe("Banco de Dados II");
+
+		await act(async () => {
+			await result.current.updateSchedule({
+				startTime: "18:30",
+				endTime: "21:10",
+				room: "Sala 420 · Bloco B",
+			});
+		});
+
+		expect(result.current.data.schedule).toBe("18:30 - 21:10");
+		expect(result.current.data.room).toBe("Sala 420 · Bloco B");
+	});
 });
