@@ -16,8 +16,8 @@ O projeto utiliza uma arquitetura **Monorepo** gerenciada pelo [Turborepo](https
 
 Antes de começar, certifique-se de ter as seguintes ferramentas instaladas na sua máquina:
 
-- [Node.js](https://nodejs.org/en/) (Versão LTS recomendada, ex: v20)
-- [pnpm](https://pnpm.io/installation) (Gerenciador de pacotes exclusivo do projeto, versão 9+)
+- [Node.js](https://nodejs.org/en/) (Versão 22.13 ou superior)
+- [pnpm](https://pnpm.io/installation) (Gerenciador de pacotes exclusivo do projeto, versão 11.10.0. Com o Node instalado, basta rodar `corepack enable`)
 - [Docker](https://www.docker.com/) (Para rodar o banco de dados localmente)
 - [Android Studio](https://developer.android.com/studio) (Com um emulador configurado para rodar o app)
 
@@ -38,7 +38,7 @@ Antes de começar, certifique-se de ter as seguintes ferramentas instaladas na s
      cp apps/server/.env.example apps/server/.env
      cp apps/native/.env.example apps/native/.env
      ```
-   - Abra os arquivos `.env` recém-criados e preencha com as credenciais reais do time (peça ao líder do projeto as chaves do Google Cloud).
+   - Abra os arquivos `.env` recém-criados e preencha com as credenciais reais do time (peça ao líder do projeto as chaves do Google Cloud). O servidor não inicia com `GOOGLE_SERVER_CLIENT_ID` ou `GOOGLE_CLIENT_SECRET` vazios.
 
 3. **Subindo o Banco de Dados:**
    Inicie o contêiner do PostgreSQL via Docker:

@@ -1,7 +1,6 @@
 import crypto from "node:crypto";
 import { OAuth2Client } from "google-auth-library";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { classSessions, courseMaterials } from "../src/db/schema/index.js";
 import { runSeed } from "../src/db/seed.js";
 import {
 	fetchClassroomSnapshotWithToken,
@@ -9,118 +8,9 @@ import {
 	parseClassroomScheduleAndRoom,
 	syncClassroomForUser,
 } from "../src/services/classroom.service.js";
+import { enrollUserInClasses } from "../src/services/class-enrollment.service.js";
 import { appRouter } from "../src/trpc/router.js";
-
-function findParams(chunk: any, results: any[] = []): any[] {
-	if (!chunk) return results;
-	if (chunk.value !== undefined && !Array.isArray(chunk.value)) {
-		results.push(chunk.value);
-	}
-	if (Array.isArray(chunk.queryChunks)) {
-		for (const sub of chunk.queryChunks) findParams(sub, results);
-	}
-	return results;
-}
-
-function findColumns(chunk: any, results: string[] = []): string[] {
-	if (!chunk) return results;
-	if (chunk.name && typeof chunk.name === "string") {
-		results.push(chunk.name);
-	}
-	if (Array.isArray(chunk.queryChunks)) {
-		for (const sub of chunk.queryChunks) findColumns(sub, results);
-	}
-	return results;
-}
-
-const columnToProp: Record<string, string> = {
-	id: "id",
-	google_course_id: "googleCourseId",
-	google_material_id: "googleMaterialId",
-	class_session_id: "classSessionId",
-	semester: "semester",
-	subject: "subject",
-	title: "title",
-};
-
-function matchesCondition(item: any, cond: any): boolean {
-	if (!cond) return true;
-	const cols = findColumns(cond);
-	const params = findParams(cond);
-	if (cols.length === 0 || params.length === 0) return true;
-
-	for (let i = 0; i < Math.min(cols.length, params.length); i++) {
-		const colName = cols[i] as string;
-		const prop = columnToProp[colName] ?? colName;
-		if (item[prop] !== undefined && item[prop] !== params[i]) {
-			return false;
-		}
-	}
-	return true;
-}
-
-function createClassroomMockDatabase() {
-	const classSessionsStore: any[] = [];
-	const materialsStore: any[] = [];
-
-	function getStore(table: any) {
-		if (table === classSessions) return classSessionsStore;
-		if (table === courseMaterials) return materialsStore;
-		return classSessionsStore;
-	}
-
-	return {
-		classSessionsStore,
-		materialsStore,
-		insert: (table: any) => ({
-			values: (data: any) => ({
-				returning: async () => {
-					const store = getStore(table);
-					const item = {
-						id: data.id ?? crypto.randomUUID(),
-						topics: data.topics ?? [],
-						createdAt: new Date(),
-						updatedAt: new Date(),
-						...data,
-					};
-					store.push(item);
-					return [item];
-				},
-			}),
-		}),
-		select: () => ({
-			from: (table: any) => {
-				const store = getStore(table);
-				const basePromise: any = Promise.resolve([...store]);
-				basePromise.where = (cond: any) => {
-					const filtered = store.filter((item) => matchesCondition(item, cond));
-					const p: any = Promise.resolve(filtered);
-					p.orderBy = () => Promise.resolve(filtered);
-					return p;
-				};
-				basePromise.orderBy = () => Promise.resolve([...store]);
-				return basePromise;
-			},
-		}),
-		update: (table: any) => ({
-			set: (data: any) => ({
-				where: (cond: any) => ({
-					returning: async () => {
-						const store = getStore(table);
-						const index = store.findIndex((item) => matchesCondition(item, cond));
-						if (index === -1) return [];
-						store[index] = {
-							...store[index],
-							...data,
-							updatedAt: data.updatedAt ?? new Date(),
-						};
-						return [store[index]];
-					},
-				}),
-			}),
-		}),
-	};
-}
+import { createClassroomMockDatabase } from "./helpers/classroom-mock-db.js";
 
 describe("Google Classroom Service & tRPC Integration", () => {
 	let mockDb: ReturnType<typeof createClassroomMockDatabase>;
@@ -309,6 +199,26 @@ describe("Google Classroom Service & tRPC Integration", () => {
 	});
 
 	describe("syncClassroomForUser & tRPC class router", () => {
+		const mockUser = {
+			id: crypto.randomUUID(),
+			name: "João Estudante",
+			email: "joao.estudante@ucsal.edu.br",
+			avatarUrl: null,
+			googleId: "g-123",
+			googleRefreshToken: null,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		};
+
+		function studentCaller() {
+			return appRouter.createCaller({
+				db: mockDb as any,
+				user: mockUser,
+				req: {} as any,
+				res: {} as any,
+			});
+		}
+
 		it("upserts courses and materials idempotently when fetcher returns active courses", async () => {
 			const customFetcher = vi.fn().mockResolvedValue([
 				{
@@ -365,23 +275,25 @@ describe("Google Classroom Service & tRPC Integration", () => {
 			expect(mockDb.materialsStore).toHaveLength(2);
 		});
 
-		it("applies UCSAL fallback seed when user has no refreshToken or 0 active courses", async () => {
-			const caller = appRouter.createCaller({
-				db: mockDb as any,
-				user: null,
-				req: {} as any,
-				res: {} as any,
+		it("applies UCSAL fallback seed when there is no user (seed script) and exposes it only to enrolled students", async () => {
+			const syncResult = await syncClassroomForUser({
+				db: mockDb,
+				refreshToken: null,
 			});
-
-			const syncResult = await caller.class.syncFromClassroom();
 			expect(syncResult.usedFallbackSeed).toBe(true);
 			expect(syncResult.syncedCourses).toBe(7);
-			expect(syncResult.courses).toHaveLength(7);
-			expect(syncResult.courses.every((c) => typeof c.semester === "string")).toBe(
-				true,
-			);
 			expect(mockDb.classSessionsStore).toHaveLength(7);
 			expect(mockDb.materialsStore.length).toBeGreaterThanOrEqual(6);
+			expect(mockDb.enrollmentsStore).toHaveLength(0);
+
+			const caller = studentCaller();
+			expect(await caller.class.list()).toHaveLength(0);
+
+			await enrollUserInClasses(
+				mockDb,
+				mockUser.id,
+				mockDb.classSessionsStore.map((s) => s.id),
+			);
 
 			const list = await caller.class.list();
 			expect(list).toHaveLength(7);
@@ -410,8 +322,8 @@ describe("Google Classroom Service & tRPC Integration", () => {
 				res: {} as any,
 			});
 
-			await caller.class.syncFromClassroom();
-			const [firstClass] = await caller.class.list();
+			await syncClassroomForUser({ db: mockDb, refreshToken: null });
+			const firstClass = mockDb.classSessionsStore[0];
 
 			const updated = await caller.class.updateSchedule({
 				id: firstClass!.id,
@@ -435,28 +347,17 @@ describe("Google Classroom Service & tRPC Integration", () => {
 		});
 
 		it("returns academic notifications derived from synced materials, assignments, and announcements", async () => {
-			const mockUser = {
-				id: crypto.randomUUID(),
-				name: "João Estudante",
-				email: "joao.estudante@ucsal.edu.br",
-				avatarUrl: null,
-				googleId: "g-123",
-				googleRefreshToken: null,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			};
-
-			const caller = appRouter.createCaller({
-				db: mockDb as any,
-				user: mockUser,
-				req: {} as any,
-				res: {} as any,
-			});
+			const caller = studentCaller();
 
 			const me = await caller.auth.me();
 			expect(me?.email).toBe("joao.estudante@ucsal.edu.br");
 
-			await caller.class.syncFromClassroom();
+			await syncClassroomForUser({ db: mockDb, refreshToken: null });
+			await enrollUserInClasses(
+				mockDb,
+				mockUser.id,
+				mockDb.classSessionsStore.map((s) => s.id),
+			);
 			const notifications = await caller.class.notifications();
 
 			expect(notifications.length).toBeGreaterThan(0);

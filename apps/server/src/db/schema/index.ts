@@ -1,39 +1,55 @@
 export {
+	type ClassEnrollment,
+	classEnrollments,
+	type NewClassEnrollment,
+} from "./class-enrollments.js";
+export {
+	type ClassSession,
 	classSessions,
 	difficultyEnum,
-	type ClassSession,
 	type NewClassSession,
 } from "./class-sessions.js";
 export {
-	courseMaterials,
 	type CourseMaterial,
+	courseMaterials,
+	ingestionStatusEnum,
 	type NewCourseMaterial,
 } from "./course-materials.js";
 export {
-	noteLinks,
+	type MaterialChunk,
+	materialChunks,
+	type NewMaterialChunk,
+} from "./material-chunks.js";
+export {
 	type NewNoteLink,
 	type NoteLink,
+	noteLinks,
 } from "./note-links.js";
 export {
-	notes,
 	type NewNote,
 	type Note,
+	notes,
 } from "./notes.js";
 export {
-	quizzes,
-	quizAttempts,
+	type NewQuestionBank,
+	type QuestionBank,
+	questionBanks,
+} from "./question-banks.js";
+export {
 	type NewQuiz,
 	type NewQuizAttempt,
 	type Quiz,
 	type QuizAttempt,
+	quizAttempts,
+	quizzes,
 } from "./quizzes.js";
 export {
-	sessions,
 	type NewSession,
 	type Session,
+	sessions,
 } from "./sessions.js";
 export {
-	users,
 	type NewUser,
 	type User,
+	users,
 } from "./users.js";

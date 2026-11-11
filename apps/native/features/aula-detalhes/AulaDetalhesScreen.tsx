@@ -19,6 +19,7 @@ import { Container } from "@/components/container";
 import { FileRow } from "@/components/molecules/FileRow";
 import { TabSwitcher } from "@/components/molecules/TabSwitcher";
 import { InsightCard } from "@/components/organisms/InsightCard";
+import { QuizSourcesCard } from "@/components/organisms/QuizSourcesCard";
 import { useAulaDetalhesViewModel } from "@/features/aula-detalhes/aulaDetalhes.viewmodel";
 
 const FILE_ICON: Record<string, React.ReactNode> = {
@@ -36,6 +37,10 @@ export function AulaDetalhesScreen() {
 			: {};
 	const { data, activeTab, setActiveTab, openMaterial, updateSchedule } =
 		useAulaDetalhesViewModel(params?.id);
+
+	const quizSources = data.files
+		.filter((file) => file.materialType === "pdf")
+		.map((file) => ({ id: file.id, name: file.name }));
 
 	const [isEditingSchedule, setIsEditingSchedule] = useState(false);
 	const [startTimeInput, setStartTimeInput] = useState(
@@ -272,16 +277,32 @@ export function AulaDetalhesScreen() {
 							/>
 						</View>
 
-						{data.insights.map((insight) => (
-							<InsightCard
-								key={insight.id}
-								summary={insight.summary}
-								coverageText={insight.coverageText}
-								points={insight.points}
-								sourceReference={insight.sourceReference}
-								onGenerateQuiz={() => router.push("/quiz")}
+						{quizSources.length > 0 ? (
+							<QuizSourcesCard
+								sources={quizSources}
+								onGenerateAll={() =>
+									router.push(`/quiz?classSessionId=${data.id}` as Href)
+								}
+								onGenerateFromSource={(materialId) =>
+									router.push(
+										`/quiz?classSessionId=${data.id}&materialId=${materialId}` as Href,
+									)
+								}
 							/>
-						))}
+						) : (
+							data.insights.map((insight) => (
+								<InsightCard
+									key={insight.id}
+									summary={insight.summary}
+									coverageText={insight.coverageText}
+									points={insight.points}
+									sourceReference={insight.sourceReference}
+									onGenerateQuiz={() =>
+										router.push(`/quiz?classSessionId=${data.id}` as Href)
+									}
+								/>
+							))
+						)}
 					</View>
 				)}
 			</View>

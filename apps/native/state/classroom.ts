@@ -252,6 +252,7 @@ function mapRemoteCourseToDetails(
 						iconName: mapMaterialTypeToIcon(m.materialType),
 						badge: "novo" as const,
 						fileUrl: m.fileUrl,
+						materialType: m.materialType,
 					}))
 			: (existing?.files ?? AULA_DETALHES_MOCK.files);
 
