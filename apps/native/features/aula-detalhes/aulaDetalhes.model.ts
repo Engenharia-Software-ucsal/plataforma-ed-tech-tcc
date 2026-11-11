@@ -5,6 +5,8 @@ export type ClassroomFile = {
 	iconName: "file-text" | "file-spreadsheet" | "video" | "link";
 	badge?: "novo" | "lido";
 	fileUrl?: string;
+	/** Tipo do material no Classroom (só quando vem do servidor), ex.: "pdf". */
+	materialType?: string;
 };
 
 export type InsightItem = {

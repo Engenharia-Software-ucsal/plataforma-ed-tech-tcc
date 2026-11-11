@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import {
+	act,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react-native";
 import { Provider } from "jotai";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QuizScreen } from "@/features/quiz/QuizScreen";
@@ -7,35 +13,42 @@ function renderScreen() {
 	return render(
 		<SafeAreaProvider>
 			<Provider>
-				<QuizScreen />
+				<QuizScreen quizId="mock-quiz-1" />
 			</Provider>
 		</SafeAreaProvider>,
 	);
 }
 
 describe("QuizScreen", () => {
-	it("renders the first question and its options", async () => {
+	it("renders the first question and its options once the quiz loads", async () => {
 		await renderScreen();
-		expect(
-			screen.getByText(
-				"Qual princípio SOLID afirma que uma classe deve ter apenas um motivo para mudar?",
-			),
-		).toBeTruthy();
+		await waitFor(() =>
+			expect(
+				screen.getByText(
+					"Qual princípio SOLID afirma que uma classe deve ter apenas um motivo para mudar?",
+				),
+			).toBeTruthy(),
+		);
 		expect(screen.getByText("Single Responsibility Principle")).toBeTruthy();
 	});
 
 	it("selects an option and advances to the next question", async () => {
 		await renderScreen();
+		await waitFor(() =>
+			expect(screen.getByText("Single Responsibility Principle")).toBeTruthy(),
+		);
 		await act(async () => {
 			fireEvent.press(screen.getByText("Single Responsibility Principle"));
 		});
 		await act(async () => {
 			fireEvent.press(screen.getByText("Próxima pergunta"));
 		});
-		expect(
-			screen.getByText(
-				"Qual padrão evita chamadas repetidas a um serviço que está falhando?",
-			),
-		).toBeTruthy();
+		await waitFor(() =>
+			expect(
+				screen.getByText(
+					"Qual padrão evita chamadas repetidas a um serviço que está falhando?",
+				),
+			).toBeTruthy(),
+		);
 	});
 });

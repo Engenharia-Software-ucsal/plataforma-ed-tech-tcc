@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { appRouter } from "../src/trpc/router.js";
 import {
 	courseMaterials,
 	noteLinks,
@@ -7,6 +6,7 @@ import {
 	quizAttempts,
 	quizzes,
 } from "../src/db/schema/index.js";
+import { appRouter } from "../src/trpc/router.js";
 
 // Helper para extrair colunas e parâmetros das condições SQL do Drizzle
 function findParams(chunk: any, results: any[] = []): any[] {
@@ -125,9 +125,15 @@ function createMockDatabase() {
 				const store = getStore(table);
 				return {
 					where: (cond: any) => {
-						const filtered = store.filter((item) => matchesCondition(item, cond));
+						const filtered = store.filter((item) =>
+							matchesCondition(item, cond),
+						);
 						const p: any = Promise.resolve(filtered);
-						p.orderBy = () => Promise.resolve(filtered);
+						p.orderBy = () => {
+							const ordered: any = Promise.resolve(filtered);
+							ordered.limit = async (n: number) => filtered.slice(0, n);
+							return ordered;
+						};
 						return p;
 					},
 					innerJoin: (joinTable: any, joinCond: any) => ({
@@ -176,7 +182,9 @@ function createMockDatabase() {
 				where: (cond: any) => ({
 					returning: async () => {
 						const store = getStore(table);
-						const index = store.findIndex((item) => matchesCondition(item, cond));
+						const index = store.findIndex((item) =>
+							matchesCondition(item, cond),
+						);
 						if (index === -1) return [];
 						store[index] = { ...store[index], ...data, updatedAt: new Date() };
 						return [store[index]];
@@ -227,7 +235,8 @@ describe("Notes tRPC Router", () => {
 	it("should create a note with tags and return the created record", async () => {
 		const created = await caller.notes.create({
 			title: "Princípio Aberto-Fechado (OCP)",
-			content: "Entidades devem ser abertas para extensão, mas fechadas para modificação.",
+			content:
+				"Entidades devem ser abertas para extensão, mas fechadas para modificação.",
 			tags: ["solid", "arquitetura", "engenharia"],
 		});
 
@@ -291,7 +300,8 @@ describe("Notes tRPC Router", () => {
 		const link = await caller.notes.addLink({
 			sourceNoteId: noteA.id,
 			targetNoteId: noteB.id,
-			reason: "A Injeção de Dependência é uma das principais formas práticas de implementar a Inversão de Controle.",
+			reason:
+				"A Injeção de Dependência é uma das principais formas práticas de implementar a Inversão de Controle.",
 		});
 
 		expect(link.id).toBeDefined();
@@ -314,9 +324,9 @@ describe("Notes tRPC Router", () => {
 
 	it("should throw NOT_FOUND when getting non-existent note", async () => {
 		const nonExistentId = crypto.randomUUID();
-		await expect(
-			caller.notes.getById({ id: nonExistentId }),
-		).rejects.toThrow("Nota não encontrada");
+		await expect(caller.notes.getById({ id: nonExistentId })).rejects.toThrow(
+			"Nota não encontrada",
+		);
 	});
 
 	it("should update a note title and content", async () => {
@@ -465,27 +475,54 @@ describe("Notes tRPC Router", () => {
 		expect(materials[0].title).toBe("Apostila de Engenharia de Software.pdf");
 
 		const quizId = crypto.randomUUID();
+		const correctOptionId = crypto.randomUUID();
 		mockDb.quizzesStore.push({
 			id: quizId,
 			classSessionId,
 			title: "Quiz 1 - Arquitetura de Software",
 			difficulty: "medio",
-			questionsJson: [{ question: "O que é OCP?" }],
+			questionsJson: [
+				{
+					id: "q1",
+					topic: "SOLID",
+					text: "O que é OCP?",
+					explanation: "OCP é o Princípio Aberto-Fechado.",
+					sourceExcerpt: "Resumo sobre processos ágeis",
+					options: [
+						{
+							id: correctOptionId,
+							text: "Aberto para extensão, fechado para modificação",
+							correct: true,
+						},
+						{
+							id: crypto.randomUUID(),
+							text: "Outra alternativa",
+							correct: false,
+						},
+					],
+				},
+			],
 			createdAt: new Date(),
 		});
 
 		const quiz = await caller.quiz.getByClass({ classSessionId });
 		expect(quiz?.id).toBe(quizId);
+		// O gabarito vai junto: o app decide quando mostrá-lo
+		const publicQuestion = quiz?.questionsJson?.[0] as {
+			options: Array<{ correct?: boolean }>;
+		};
+		expect(publicQuestion.options[0]).toHaveProperty("correct");
 
 		const attempt = await caller.quiz.submitAttempt({
 			quizId,
-			score: 85,
-			answersJson: { q1: "b" },
+			answers: [{ questionId: "q1", optionId: correctOptionId }],
 			timeSpentSeconds: 120,
 		});
 
-		expect(attempt.quizId).toBe(quizId);
-		expect(attempt.score).toBe("85");
-		expect(attempt.timeSpentSeconds).toBe(120);
+		expect(attempt.correct).toBe(1);
+		expect(attempt.total).toBe(1);
+		expect(attempt.score).toBe(100);
+		expect(mockDb.attemptsStore[0].userId).toBe(mockUser.id);
+		expect(mockDb.attemptsStore[0].timeSpentSeconds).toBe(120);
 	});
 });

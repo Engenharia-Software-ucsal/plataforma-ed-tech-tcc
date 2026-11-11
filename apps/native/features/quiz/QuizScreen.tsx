@@ -1,16 +1,27 @@
 import { useRouter } from "expo-router";
 import { ArrowRight, X } from "lucide-react-native";
-import { Pressable, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 import { AppButton } from "@/components/atoms/AppButton";
 import { AppText } from "@/components/atoms/AppText";
 import { Chip } from "@/components/atoms/Chip";
 import { Container } from "@/components/container";
 import { QuizOptionRow } from "@/components/molecules/QuizOptionRow";
+import { OPTION_LETTERS } from "@/features/quiz/quiz.model";
 import { useQuizViewModel } from "@/features/quiz/quiz.viewmodel";
 
-export function QuizScreen() {
+export function QuizScreen({
+	classSessionId,
+	materialId,
+	quizId,
+}: {
+	classSessionId?: string;
+	materialId?: string;
+	quizId?: string;
+}) {
 	const router = useRouter();
 	const {
+		status,
+		errorMessage,
 		question,
 		index,
 		total,
@@ -18,16 +29,54 @@ export function QuizScreen() {
 		selectedOptionId,
 		selectOption,
 		goNext,
-	} = useQuizViewModel();
-	const progressPercent = ((index + 1) / total) * 100;
+		submitting,
+	} = useQuizViewModel({ classSessionId, materialId, quizId });
 
-	function handleNext() {
-		if (isLast) {
+	async function handleNext() {
+		const outcome = await goNext();
+		if (outcome === "submitted") {
 			router.replace("/quiz-resultado");
-			return;
 		}
-		goNext();
 	}
+
+	if (status === "loading") {
+		return (
+			<Container className="bg-surface-primary">
+				<View className="flex-1 items-center justify-center gap-4 p-5">
+					<ActivityIndicator color="#582CFF" />
+					<AppText variant="body" tone="muted">
+						Preparando o quiz da aula...
+					</AppText>
+				</View>
+			</Container>
+		);
+	}
+
+	if (status === "error" || !question) {
+		return (
+			<Container className="bg-surface-primary">
+				<View className="flex-1 items-center justify-center gap-4 p-5">
+					<AppText
+						variant="heading"
+						tone="primary"
+						className="text-center font-semibold"
+					>
+						Não foi possível gerar o quiz
+					</AppText>
+					<AppText variant="body" tone="muted" className="text-center text-sm">
+						{errorMessage ?? "Tente novamente em alguns instantes."}
+					</AppText>
+					<AppButton
+						label="Voltar"
+						variant="outline"
+						onPress={() => router.back()}
+					/>
+				</View>
+			</Container>
+		);
+	}
+
+	const progressPercent = ((index + 1) / total) * 100;
 
 	return (
 		<Container className="bg-surface-primary">
@@ -71,10 +120,10 @@ export function QuizScreen() {
 						{question.text}
 					</AppText>
 					<View className="gap-2.5">
-						{question.options.map((option) => (
+						{question.options.map((option, optionIndex) => (
 							<QuizOptionRow
 								key={option.id}
-								letter={option.letter}
+								letter={OPTION_LETTERS[optionIndex] ?? "?"}
 								text={option.text}
 								selected={option.id === selectedOptionId}
 								onPress={() => selectOption(option.id)}
@@ -84,10 +133,16 @@ export function QuizScreen() {
 				</View>
 
 				<AppButton
-					label={isLast ? "Ver resultado" : "Próxima pergunta"}
+					label={
+						submitting
+							? "Enviando..."
+							: isLast
+								? "Ver resultado"
+								: "Próxima pergunta"
+					}
 					onPress={handleNext}
 					icon={<ArrowRight size={16} color="#FFFFFF" />}
-					disabled={!selectedOptionId}
+					disabled={!selectedOptionId || submitting}
 				/>
 			</View>
 		</Container>
