@@ -2,6 +2,7 @@ import { env } from "@busuucsal-v3/env/server";
 import { eq } from "drizzle-orm";
 import { OAuth2Client } from "google-auth-library";
 import { classSessions, courseMaterials } from "../db/schema/index.js";
+import { enrollUserInClasses } from "./class-enrollment.service.js";
 
 export type ClassroomMaterialSeed = {
 	googleMaterialId: string;
@@ -530,6 +531,8 @@ export async function fetchClassroomSnapshotWithToken(
 
 export async function syncClassroomForUser(options: {
 	db: any;
+	/** Quem está sincronizando: só ele é matriculado nas turmas que o Classroom devolver. */
+	userId?: string | null;
 	refreshToken?: string | null;
 	fetcher?: ClassroomFetcher;
 }): Promise<{
@@ -538,7 +541,12 @@ export async function syncClassroomForUser(options: {
 	usedFallbackSeed: boolean;
 	syncedAt: string;
 }> {
-	const { db, refreshToken, fetcher = fetchClassroomSnapshotWithToken } = options;
+	const {
+		db,
+		userId,
+		refreshToken,
+		fetcher = fetchClassroomSnapshotWithToken,
+	} = options;
 	let coursesToSync: ClassroomCourseSeed[] = [];
 	let usedFallbackSeed = false;
 
@@ -551,8 +559,17 @@ export async function syncClassroomForUser(options: {
 	}
 
 	if (coursesToSync.length === 0) {
-		coursesToSync = UCSAL_DEFAULT_CLASSES;
 		usedFallbackSeed = true;
+		// Aluno logado sem turmas reais não ganha aulas fictícias no banco compartilhado.
+		if (userId) {
+			return {
+				syncedCourses: 0,
+				syncedMaterials: 0,
+				usedFallbackSeed,
+				syncedAt: new Date().toISOString(),
+			};
+		}
+		coursesToSync = UCSAL_DEFAULT_CLASSES;
 	}
 
 	const now = new Date();
@@ -562,12 +579,14 @@ export async function syncClassroomForUser(options: {
 
 	let syncedCourses = 0;
 	let syncedMaterials = 0;
+	const syncedSessionIds: string[] = [];
 
 	for (const course of coursesToSync) {
-		const existing = existingSessions.find(
-			(s) =>
-				(course.googleCourseId && s.googleCourseId === course.googleCourseId) ||
-				s.subject === course.subject,
+		// Turmas diferentes podem ter o mesmo nome: com ID do Classroom, só ele identifica a aula.
+		const existing = existingSessions.find((s) =>
+			course.googleCourseId
+				? s.googleCourseId === course.googleCourseId
+				: s.subject === course.subject,
 		);
 
 		let sessionId: string;
@@ -609,6 +628,7 @@ export async function syncClassroomForUser(options: {
 		}
 
 		syncedCourses += 1;
+		syncedSessionIds.push(sessionId);
 
 		const existingMaterials: Array<typeof courseMaterials.$inferSelect> = await db
 			.select()
@@ -653,6 +673,10 @@ export async function syncClassroomForUser(options: {
 
 			syncedMaterials += 1;
 		}
+	}
+
+	if (userId) {
+		await enrollUserInClasses(db, userId, syncedSessionIds);
 	}
 
 	return {

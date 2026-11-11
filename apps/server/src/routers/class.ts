@@ -2,30 +2,32 @@ import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { classSessions, courseMaterials } from "../db/schema/index.js";
+import {
+	isUserEnrolled,
+	listClassesForUser,
+	listMaterialsForClasses,
+} from "../services/class-enrollment.service.js";
 import { syncClassroomForUser } from "../services/classroom.service.js";
-import { publicProcedure, router } from "../trpc/index.js";
+import { startBackgroundIngestion } from "../services/ingestion/background.js";
+import { protectedProcedure, publicProcedure, router } from "../trpc/index.js";
 
 export const classRouter = router({
-	list: publicProcedure
+	list: protectedProcedure
 		.input(z.object({ semester: z.string().optional() }).optional())
-		.query(async ({ ctx, input }) => {
-			if (input?.semester && input.semester !== "todos") {
-				return ctx.db
-					.select()
-					.from(classSessions)
-					.where(eq(classSessions.semester, input.semester))
-					.orderBy(classSessions.startTime);
-			}
-			return ctx.db.select().from(classSessions).orderBy(classSessions.startTime);
-		}),
+		.query(({ ctx, input }) =>
+			listClassesForUser(ctx.db, ctx.user.id, input?.semester),
+		),
 
-	byId: publicProcedure
+	byId: protectedProcedure
 		.input(z.object({ id: z.string().min(1) }))
 		.query(async ({ ctx, input }) => {
-			const [session] = await ctx.db
-				.select()
-				.from(classSessions)
-				.where(eq(classSessions.id, input.id));
+			const enrolled = await isUserEnrolled(ctx.db, ctx.user.id, input.id);
+			const [session] = enrolled
+				? await ctx.db
+						.select()
+						.from(classSessions)
+						.where(eq(classSessions.id, input.id))
+				: [];
 			if (!session) {
 				throw new TRPCError({
 					code: "NOT_FOUND",
@@ -66,16 +68,25 @@ export const classRouter = router({
 			return created;
 		}),
 
-	syncFromClassroom: publicProcedure.mutation(async ({ ctx }) => {
+	syncFromClassroom: protectedProcedure.mutation(async ({ ctx }) => {
 		const syncResult = await syncClassroomForUser({
 			db: ctx.db,
-			refreshToken: ctx.user?.googleRefreshToken ?? null,
+			userId: ctx.user.id,
+			refreshToken: ctx.user.googleRefreshToken ?? null,
 		});
-		const sessions = await ctx.db
-			.select()
-			.from(classSessions)
-			.orderBy(classSessions.startTime);
-		const allMaterials = await ctx.db.select().from(courseMaterials);
+		const sessions = await listClassesForUser(ctx.db, ctx.user.id);
+		const allMaterials = await listMaterialsForClasses(
+			ctx.db,
+			sessions.map((s) => s.id),
+		);
+
+		startBackgroundIngestion({
+			db: ctx.db,
+			userId: ctx.user.id,
+			refreshToken: ctx.user.googleRefreshToken,
+			classSessionIds: sessions.map((s) => s.id),
+			log: ctx.req.log,
+		});
 
 		const courses = sessions.map((c) => ({
 			...c,
@@ -119,9 +130,12 @@ export const classRouter = router({
 			return updated;
 		}),
 
-	notifications: publicProcedure.query(async ({ ctx }) => {
-		const sessions = await ctx.db.select().from(classSessions);
-		const materials = await ctx.db.select().from(courseMaterials);
+	notifications: protectedProcedure.query(async ({ ctx }) => {
+		const sessions = await listClassesForUser(ctx.db, ctx.user.id);
+		const materials = await listMaterialsForClasses(
+			ctx.db,
+			sessions.map((s) => s.id),
+		);
 
 		const sessionMap = new Map(sessions.map((s) => [s.id, s]));
 
