@@ -15,6 +15,14 @@ if (process.env.EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID) {
 		webClientId: process.env.EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID,
 		offlineAccess: true,
 		hostedDomain: "ucsal.edu.br",
+		scopes: [
+			"https://www.googleapis.com/auth/classroom.courses.readonly",
+			"https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly",
+			"https://www.googleapis.com/auth/classroom.coursework.me.readonly",
+			"https://www.googleapis.com/auth/classroom.announcements.readonly",
+			"https://www.googleapis.com/auth/classroom.topics.readonly",
+			"https://www.googleapis.com/auth/drive.readonly",
+		],
 	});
 } else {
 	console.warn("⚠️ EXPO_PUBLIC_GOOGLE_SERVER_CLIENT_ID is not set! Google Auth will fail.");
