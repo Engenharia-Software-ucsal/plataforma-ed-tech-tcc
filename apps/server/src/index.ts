@@ -6,7 +6,8 @@ import {
 	fastifyTRPCPlugin,
 } from "@trpc/server/adapters/fastify";
 import Fastify from "fastify";
-import { pool } from "./db/index.js";
+import { db, pool } from "./db/index.js";
+import { scheduleTrashPurge } from "./services/notes/trash-purge.js";
 import { createContext } from "./trpc/context.js";
 import { type AppRouter, appRouter } from "./trpc/router.js";
 
@@ -44,6 +45,8 @@ export async function buildServer() {
 
 const start = async () => {
 	const server = await buildServer();
+	const stopTrashPurge = scheduleTrashPurge(db, server.log);
+	server.addHook("onClose", async () => stopTrashPurge());
 	try {
 		await server.listen({ port: env.PORT, host: "0.0.0.0" });
 	} catch (err) {

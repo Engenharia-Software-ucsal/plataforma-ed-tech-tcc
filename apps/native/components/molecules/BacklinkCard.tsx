@@ -1,13 +1,14 @@
-import { Link2, Sparkles, Trash2 } from "lucide-react-native";
+import { Brackets, Link2, Sparkles, Trash2 } from "lucide-react-native";
 import { Pressable, View } from "react-native";
 import { AppText } from "@/components/atoms/AppText";
 import { Chip } from "@/components/atoms/Chip";
 
 export type BacklinkCardProps = {
 	title: string;
-	linkType: "manual" | "ai_suggested";
-	reason: string;
-	similarityScore?: string | number;
+	linkType: "manual" | "ai_suggested" | "wikilink";
+	/** Nulo nos vínculos que vêm de um `[[link]]` no texto. */
+	reason: string | null;
+	similarityScore?: string | number | null;
 	onPress?: () => void;
 	onDelete?: () => void;
 	testID?: string;
@@ -23,6 +24,8 @@ export function BacklinkCard({
 	testID,
 }: BacklinkCardProps) {
 	const isAi = linkType === "ai_suggested";
+	const isWikilink = linkType === "wikilink";
+	const typeLabel = isAi ? "IA" : isWikilink ? "No texto" : "Manual";
 
 	return (
 		<View
@@ -38,6 +41,8 @@ export function BacklinkCard({
 					<View className="h-7 w-7 items-center justify-center rounded-sm-card bg-accent-light">
 						{isAi ? (
 							<Sparkles size={14} color="#BF40FF" />
+						) : isWikilink ? (
+							<Brackets size={14} color="#00F2FF" />
 						) : (
 							<Link2 size={14} color="#582CFF" />
 						)}
@@ -53,10 +58,7 @@ export function BacklinkCard({
 				</Pressable>
 
 				<View className="flex-row items-center gap-2">
-					<Chip
-						label={isAi ? "IA" : "Manual"}
-						tone={isAi ? "accent" : "muted"}
-					/>
+					<Chip label={typeLabel} tone={isAi ? "accent" : "muted"} />
 					{onDelete && (
 						<Pressable
 							testID={testID ? `${testID}-delete-btn` : "delete-link-btn"}
@@ -70,27 +72,33 @@ export function BacklinkCard({
 				</View>
 			</View>
 
-			<View className="rounded-sm-card border border-border-subtle/80 bg-surface-primary/70 p-2.5">
-				<AppText
-					variant="caption"
-					tone="secondary"
-					className="text-[12px] italic leading-4"
-				>
-					"{reason}"
-				</AppText>
-				{similarityScore !== undefined && (
+			{reason ? (
+				<View className="rounded-sm-card border border-border-subtle/80 bg-surface-primary/70 p-2.5">
 					<AppText
 						variant="caption"
-						tone="muted"
-						className="mt-1 text-[10px]"
+						tone="secondary"
+						className="text-[12px] italic leading-4"
 					>
-						Afinidade:{" "}
-						{typeof similarityScore === "number"
-							? `${Math.round(similarityScore * 100)}%`
-							: similarityScore}
+						"{reason}"
 					</AppText>
-				)}
-			</View>
+					{similarityScore !== undefined && similarityScore !== null && (
+						<AppText
+							variant="caption"
+							tone="muted"
+							className="mt-1 text-[10px]"
+						>
+							Afinidade:{" "}
+							{typeof similarityScore === "number"
+								? `${Math.round(similarityScore * 100)}%`
+								: similarityScore}
+						</AppText>
+					)}
+				</View>
+			) : (
+				<AppText variant="caption" tone="muted" className="text-[12px]">
+					Mencionada com [[link]] no texto da nota.
+				</AppText>
+			)}
 		</View>
 	);
 }

@@ -1,22 +1,25 @@
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Provider } from "jotai";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NotaDetalhesScreen } from "@/features/notas/NotaDetalhesScreen";
+import { trpc } from "@/utils/trpc";
 
 jest.mock("expo-router", () => ({
 	useRouter: jest.fn(),
 	useLocalSearchParams: jest.fn(),
 }));
 
-function renderScreen() {
-	return render(
+async function renderScreen(id = "note-1") {
+	(useLocalSearchParams as jest.Mock).mockReturnValue({ id });
+	await render(
 		<SafeAreaProvider>
 			<Provider>
 				<NotaDetalhesScreen />
 			</Provider>
 		</SafeAreaProvider>,
 	);
+	await screen.findByTestId("note-markdown-content");
 }
 
 describe("NotaDetalhesScreen", () => {
@@ -30,176 +33,147 @@ describe("NotaDetalhesScreen", () => {
 			back: mockBack,
 			replace: jest.fn(),
 		});
-		(useLocalSearchParams as jest.Mock).mockReturnValue({
-			id: "note-1",
-		});
 	});
 
-	it("renders note details, wikilinks, and outbound/inbound sections", async () => {
-		await renderScreen();
+	afterEach(() => {
+		jest.restoreAllMocks();
+	});
 
+	it("renderiza o Markdown, a tag da matéria, os links e os backlinks", async () => {
+		await renderScreen();
 		expect(
 			screen.getByText("Arquitetura Hexagonal (Ports and Adapters)"),
 		).toBeTruthy();
-		expect(screen.getByText("Notas Conectadas (Outbound)")).toBeTruthy();
-		expect(
-			screen.getByText("Mencionado em (Backlinks Inbound)"),
-		).toBeTruthy();
-
-		// Check existing links via testIDs and titles
+		expect(screen.getByText("Pendências")).toBeTruthy();
+		expect(screen.getByText("portas e adaptadores")).toBeTruthy();
+		expect(screen.getByTestId("auto-tag-engenharia-de-software")).toBeTruthy();
 		expect(screen.getByTestId("outbound-link-link-1")).toBeTruthy();
-		expect(screen.getByTestId("outbound-link-link-2")).toBeTruthy();
 		expect(screen.getByTestId("inbound-link-link-3")).toBeTruthy();
-		expect(screen.getAllByText("Inversão de Dependência (DIP)").length).toBeGreaterThanOrEqual(1);
-		expect(screen.getByText("Clean Architecture")).toBeTruthy();
+		expect(screen.getByText("No texto")).toBeTruthy();
+		expect(screen.getByTestId("links-pendentes")).toBeTruthy();
 	});
 
-	it("navigates when clicking a wikilink in reading mode", async () => {
+	it("abre a nota de um wikilink resolvido", async () => {
 		await renderScreen();
-
-		const wikilink = screen.getByTestId(
-			"wikilink-Inversão de Dependência (DIP)",
+		await fireEvent.press(
+			screen.getByTestId("wikilink-Inversão de Dependência (DIP)"),
 		);
-		await act(async () => {
-			fireEvent.press(wikilink);
-		});
-
 		expect(mockPush).toHaveBeenCalledWith({
 			pathname: "/nota-detalhes",
 			params: { id: "note-2" },
 		});
 	});
 
-	it("switches to editing mode, changes title and saves", async () => {
+	it("oferece criar a nota de um wikilink pendente", async () => {
+		const create = jest.spyOn(trpc.notes.create, "mutate");
 		await renderScreen();
-
-		// Switch to editing tab
-		await act(async () => {
-			fireEvent.press(screen.getByTestId("tab-editing"));
-		});
-
-		const titleInput = screen.getByTestId("input-edit-title");
-		await act(async () => {
-			fireEvent.changeText(
-				titleInput,
-				"Arquitetura Hexagonal Avançada (Ports & Adapters)",
-			);
-		});
-
-		// Save changes
-		await act(async () => {
-			fireEvent.press(screen.getByTestId("btn-salvar-nota"));
-		});
-
-		// Check updated title in reading mode
+		await fireEvent.press(
+			screen.getByTestId("wikilink-Arquitetura em Camadas"),
+		);
 		expect(
-			screen.getByText("Arquitetura Hexagonal Avançada (Ports & Adapters)"),
+			screen.getByText('"Arquitetura em Camadas" ainda não existe'),
 		).toBeTruthy();
+
+		await fireEvent.press(screen.getByTestId("criar-nota-do-link-criar"));
+		expect(create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				title: "Arquitetura em Camadas",
+				folderId: "folder-arq",
+			}),
+		);
+		expect(mockPush).toHaveBeenCalledWith({
+			pathname: "/nota-detalhes",
+			params: { id: expect.stringMatching(/^note-/) },
+		});
 	});
 
-	it("adds an AI-suggested link with justification reason", async () => {
+	it("edita com a barra de formatação e salva ao concluir", async () => {
+		const update = jest.spyOn(trpc.notes.update, "mutate");
+		await renderScreen("note-4");
+		await fireEvent.press(screen.getByTestId("tab-edit"));
+
+		await fireEvent.changeText(screen.getByTestId("input-edit-content"), "");
+		await fireEvent.press(screen.getByTestId("toolbar-bold"));
+		expect(screen.getByTestId("input-edit-content").props.value).toBe("****");
+
+		await fireEvent.changeText(
+			screen.getByTestId("input-edit-title"),
+			"Normalização (3FN)",
+		);
+		await fireEvent.press(screen.getByTestId("btn-concluir-edicao"));
+
+		expect(update).toHaveBeenCalledWith(
+			expect.objectContaining({
+				id: "note-4",
+				title: "Normalização (3FN)",
+				content: "****",
+			}),
+		);
+		expect(await screen.findByText("Normalização (3FN)")).toBeTruthy();
+	});
+
+	it("mostra sugestões de notas ao digitar [[", async () => {
+		await renderScreen("note-4");
+		await fireEvent.press(screen.getByTestId("tab-edit"));
+		const input = screen.getByTestId("input-edit-content");
+		await fireEvent.changeText(input, "ver [[Clean");
+		await fireEvent(input, "selectionChange", {
+			nativeEvent: { selection: { start: 11, end: 11 } },
+		});
+
+		await fireEvent.press(
+			await screen.findByTestId("sugestao-wikilink-note-3"),
+		);
+		expect(screen.getByTestId("input-edit-content").props.value).toBe(
+			"ver [[Clean Architecture]]",
+		);
+	});
+
+	it("adiciona um vínculo sugerido pela IA com justificativa", async () => {
+		const addLink = jest.spyOn(trpc.notes.addLink, "mutate");
 		await renderScreen();
+		await fireEvent.press(screen.getByTestId("btn-sugerir-ia"));
+		await fireEvent.press(await screen.findByTestId("ai-suggestion-note-4"));
+		await fireEvent.changeText(
+			screen.getByTestId("input-justificativa-ia"),
+			"Persistência relacional por trás dos adaptadores.",
+		);
+		await fireEvent.press(screen.getByTestId("btn-confirmar-vinculo-ia"));
 
-		// Open IA suggestions modal
-		await act(async () => {
-			fireEvent.press(screen.getByTestId("btn-sugerir-ia"));
+		expect(addLink).toHaveBeenCalledWith({
+			sourceNoteId: "note-1",
+			targetNoteId: "note-4",
+			reason: "Persistência relacional por trás dos adaptadores.",
+			linkType: "ai_suggested",
 		});
-
-		expect(screen.getByText("Sugestões Conceituais (IA)")).toBeTruthy();
-
-		// Select candidate note
-		await act(async () => {
-			fireEvent.press(screen.getByTestId("ai-suggestion-note-4"));
-		});
-
-		// Fill in semantic justification
-		const justificationInput = screen.getByTestId("input-justificativa-ia");
-		await act(async () => {
-			fireEvent.changeText(
-				justificationInput,
-				"Justificativa robusta conectando persistência relacional com adaptadores.",
-			);
-		});
-
-		// Confirm AI link
-		await act(async () => {
-			fireEvent.press(screen.getByTestId("btn-confirmar-vinculo-ia"));
-		});
-
-		// Modal should close and new link should be rendered
-		expect(screen.queryByText("Sugestões Conceituais (IA)")).toBeNull();
 		expect(
-			screen.getByText(
-				'"Justificativa robusta conectando persistência relacional com adaptadores."',
-			),
-		).toBeTruthy();
+			screen.getAllByText("Normalização de Banco de Dados").length,
+		).toBeGreaterThanOrEqual(1);
 	});
 
-	it("adds a manual link with required justification reason", async () => {
-		(useLocalSearchParams as jest.Mock).mockReturnValue({
-			id: "note-3",
-		});
-		await renderScreen();
-
-		// Open Manual Link Modal
-		await act(async () => {
-			fireEvent.press(screen.getByTestId("btn-adicionar-vinculo-manual"));
-		});
-
-		expect(screen.getByText("Novo Vínculo Manual")).toBeTruthy();
-
-		// Select target note
-		await act(async () => {
-			fireEvent.press(screen.getByTestId("manual-note-note-4"));
-		});
-
-		// Fill in reason
-		const manualInput = screen.getByTestId("input-justificativa-manual");
-		await act(async () => {
-			fireEvent.changeText(
-				manualInput,
-				"Clean Architecture isola o acesso a banco de dados com Gateways.",
-			);
-		});
-
-		// Submit
-		await act(async () => {
-			fireEvent.press(screen.getByTestId("btn-salvar-vinculo-manual"));
-		});
-
-		// Modal closes and new outbound link is visible
-		expect(screen.queryByText("Novo Vínculo Manual")).toBeNull();
-		expect(
-			screen.getByText(
-				'"Clean Architecture isola o acesso a banco de dados com Gateways."',
-			),
-		).toBeTruthy();
+	it("não oferece remover vínculos que vêm do texto", async () => {
+		await renderScreen("note-2");
+		expect(screen.queryByTestId("outbound-link-link-3-delete-btn")).toBeNull();
 	});
 
-	it("removes an outbound link when delete button is pressed", async () => {
-		(useLocalSearchParams as jest.Mock).mockReturnValue({
-			id: "note-1",
-		});
+	it("move a nota para a lixeira e volta", async () => {
+		const remove = jest.spyOn(trpc.notes.delete, "mutate");
 		await renderScreen();
-
-		const deleteBtn = screen.getByTestId("outbound-link-link-1-delete-btn");
-		await act(async () => {
-			fireEvent.press(deleteBtn);
-		});
-
-		expect(
-			screen.queryByTestId("outbound-link-link-1"),
-		).toBeNull();
+		await fireEvent.press(screen.getByTestId("btn-lixeira-nota"));
+		await fireEvent.press(screen.getByTestId("confirmar-lixeira-confirmar"));
+		expect(remove).toHaveBeenCalledWith({ id: "note-1" });
+		expect(mockBack).toHaveBeenCalled();
 	});
 
-	it("handles back button click", async () => {
-		await renderScreen();
-
-		const backBtn = screen.getByTestId("btn-voltar-notas");
-		await act(async () => {
-			fireEvent.press(backBtn);
-		});
-
-		expect(mockBack).toHaveBeenCalledTimes(1);
+	it("mostra a tela de nota não encontrada", async () => {
+		(useLocalSearchParams as jest.Mock).mockReturnValue({ id: "nao-existe" });
+		await render(
+			<SafeAreaProvider>
+				<Provider>
+					<NotaDetalhesScreen />
+				</Provider>
+			</SafeAreaProvider>,
+		);
+		expect(await screen.findByText("Nota não encontrada.")).toBeTruthy();
 	});
 });

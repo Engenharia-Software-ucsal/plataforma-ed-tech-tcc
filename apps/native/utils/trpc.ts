@@ -1,5 +1,21 @@
+import { markdownPreview } from "@busuucsal-v3/notes";
 import * as SecureStore from "expo-secure-store";
 import { CLASS_SESSIONS } from "@/features/aulas/aulas.model";
+import {
+	type AiSuggestedLink,
+	INITIAL_AI_SUGGESTIONS_MAP,
+	INITIAL_NOTES_MOCK,
+	MOCK_NOTES_TREE,
+	MOCK_TRASH,
+	type Note,
+	type NoteFolder,
+	type NoteLink,
+	type NoteSummary,
+	type NotesTree,
+	resolveWikilinks,
+	type TrashItem,
+	type TrashItemType,
+} from "@/features/notas/notas.model";
 import { NOTIFICATIONS_MOCK } from "@/features/notificacoes/notificacoes.model";
 
 export type TrpcSyncedCourse = {
@@ -94,7 +110,8 @@ const MOCK_QUIZ_FOR_TESTS: TrpcQuiz = {
 			id: "q1",
 			topic: "SOLID",
 			text: "Qual princípio SOLID afirma que uma classe deve ter apenas um motivo para mudar?",
-			explanation: "Single Responsibility Principle: uma classe deve ter um único motivo para mudar.",
+			explanation:
+				"Single Responsibility Principle: uma classe deve ter um único motivo para mudar.",
 			options: [
 				{ id: "q1-a", text: "Open/Closed Principle", correct: false },
 				{ id: "q1-b", text: "Single Responsibility Principle", correct: true },
@@ -106,7 +123,8 @@ const MOCK_QUIZ_FOR_TESTS: TrpcQuiz = {
 			id: "q2",
 			topic: "Resiliência",
 			text: "Qual padrão evita chamadas repetidas a um serviço que está falhando?",
-			explanation: "O Circuit Breaker interrompe chamadas a um serviço que está falhando.",
+			explanation:
+				"O Circuit Breaker interrompe chamadas a um serviço que está falhando.",
 			options: [
 				{ id: "q2-a", text: "Circuit Breaker", correct: true },
 				{ id: "q2-b", text: "Singleton", correct: false },
@@ -229,7 +247,269 @@ async function callTrpcHttpOrThrow<T>(
 	return result.data;
 }
 
+/** Resposta de `notes.create` / `notes.update`: a nota salva e as outras que mudaram junto. */
+export type SavedNote = NoteSummary & {
+	content: string;
+	/** Notas cujo texto ou vínculos mudaram por causa deste salvamento (ex.: renomeação). */
+	affectedNoteIds: string[];
+};
+
+export type NoteCreateInput = {
+	title: string;
+	content?: string;
+	tags?: string[];
+	classSessionId?: string;
+	folderId?: string | null;
+};
+
+export type NoteUpdateInput = {
+	id: string;
+	title?: string;
+	content?: string;
+	tags?: string[];
+	classSessionId?: string | null;
+	/** Versão que o app tinha; o servidor responde CONFLICT se a nota mudou depois. */
+	expectedUpdatedAt?: string;
+};
+
+function mockSavedNote(
+	base: Partial<Note> & { id: string; title: string },
+): SavedNote {
+	const now = new Date().toISOString();
+	const content = base.content ?? "";
+	return {
+		folderId: null,
+		position: 0,
+		tags: [],
+		autoTags: [],
+		classSessionId: null,
+		linkCount: 0,
+		createdAt: now,
+		...base,
+		content,
+		preview: markdownPreview(content),
+		updatedAt: now,
+		affectedNoteIds: [],
+	};
+}
+
+function mockNoteDetail(id: string): Note | null {
+	const note = INITIAL_NOTES_MOCK.find((n) => n.id === id);
+	return note
+		? { ...note, wikilinks: resolveWikilinks(note.content, INITIAL_NOTES_MOCK) }
+		: null;
+}
+
+const notesApi = {
+	/** Busca no servidor (título e texto completo). */
+	list: {
+		query: async (input: {
+			search?: string;
+			tag?: string;
+			folderId?: string | null;
+		}): Promise<NoteSummary[]> => {
+			const search = input.search?.trim().toLowerCase() ?? "";
+			const fallback = MOCK_NOTES_TREE.notes.filter((note) => {
+				const full = INITIAL_NOTES_MOCK.find((n) => n.id === note.id);
+				return (
+					!search ||
+					note.title.toLowerCase().includes(search) ||
+					(full?.content.toLowerCase().includes(search) ?? false)
+				);
+			});
+			return callTrpcHttpOrThrow("notes.list", "GET", input, fallback);
+		},
+	},
+	getById: {
+		query: async (input: { id: string }): Promise<Note | null> =>
+			callTrpcHttpOrThrow(
+				"notes.getById",
+				"GET",
+				input,
+				mockNoteDetail(input.id),
+			),
+	},
+	create: {
+		mutate: async (input: NoteCreateInput): Promise<SavedNote> =>
+			callTrpcHttpOrThrow(
+				"notes.create",
+				"POST",
+				input,
+				mockSavedNote({
+					id: `note-${Date.now()}`,
+					title: input.title.trim(),
+					content: input.content,
+					tags: input.tags ?? [],
+					folderId: input.folderId ?? null,
+					classSessionId: input.classSessionId ?? null,
+				}),
+			),
+	},
+	update: {
+		mutate: async (input: NoteUpdateInput): Promise<SavedNote> => {
+			const { expectedUpdatedAt: _expectedUpdatedAt, ...changes } = input;
+			const current = INITIAL_NOTES_MOCK.find((n) => n.id === input.id);
+			return callTrpcHttpOrThrow(
+				"notes.update",
+				"POST",
+				input,
+				mockSavedNote({
+					...current,
+					...changes,
+					title: changes.title?.trim() ?? current?.title ?? "Nota",
+				}),
+			);
+		},
+	},
+	delete: {
+		mutate: async (input: { id: string }) =>
+			callTrpcHttpOrThrow("notes.delete", "POST", input, {
+				success: true,
+				id: input.id,
+			}),
+	},
+	move: {
+		mutate: async (input: {
+			id: string;
+			folderId: string | null;
+			position?: number;
+		}) =>
+			callTrpcHttpOrThrow("notes.move", "POST", input, {
+				success: true,
+				id: input.id,
+				folderId: input.folderId,
+			}),
+	},
+	reorder: {
+		mutate: async (input: { folderId: string | null; orderedIds: string[] }) =>
+			callTrpcHttpOrThrow("notes.reorder", "POST", input, {
+				orderedIds: input.orderedIds,
+			}),
+	},
+	addLink: {
+		mutate: async (input: {
+			sourceNoteId: string;
+			targetNoteId: string;
+			reason: string;
+			linkType?: "manual" | "ai_suggested";
+		}): Promise<NoteLink> =>
+			callTrpcHttpOrThrow("notes.addLink", "POST", input, {
+				id: `link-${Date.now()}`,
+				sourceNoteId: input.sourceNoteId,
+				targetNoteId: input.targetNoteId,
+				linkType: input.linkType ?? "manual",
+				reason: input.reason.trim(),
+				similarityScore: "1.00",
+				createdAt: new Date().toISOString(),
+			}),
+	},
+	removeLink: {
+		mutate: async (input: { id: string }) =>
+			callTrpcHttpOrThrow("notes.removeLink", "POST", input, {
+				success: true,
+				id: input.id,
+			}),
+	},
+	suggestLinks: {
+		query: async (input: { noteId: string }): Promise<AiSuggestedLink[]> =>
+			callTrpcHttpOrThrow(
+				"notes.suggestLinks",
+				"GET",
+				input,
+				INITIAL_AI_SUGGESTIONS_MAP[input.noteId] ?? [],
+			),
+	},
+};
+
+const foldersApi = {
+	tree: {
+		query: async (): Promise<NotesTree> =>
+			callTrpcHttpOrThrow("folders.tree", "GET", undefined, MOCK_NOTES_TREE),
+	},
+	create: {
+		mutate: async (input: {
+			name: string;
+			parentId?: string | null;
+		}): Promise<NoteFolder> =>
+			callTrpcHttpOrThrow("folders.create", "POST", input, {
+				id: `folder-${Date.now()}`,
+				parentId: input.parentId ?? null,
+				name: input.name.trim(),
+				position: Number.MAX_SAFE_INTEGER,
+			}),
+	},
+	rename: {
+		mutate: async (input: {
+			id: string;
+			name: string;
+		}): Promise<NoteFolder> => {
+			const current = MOCK_NOTES_TREE.folders.find((f) => f.id === input.id);
+			return callTrpcHttpOrThrow("folders.rename", "POST", input, {
+				id: input.id,
+				parentId: current?.parentId ?? null,
+				position: current?.position ?? 0,
+				name: input.name.trim(),
+			});
+		},
+	},
+	move: {
+		mutate: async (input: {
+			id: string;
+			parentId: string | null;
+			position?: number;
+		}) =>
+			callTrpcHttpOrThrow("folders.move", "POST", input, {
+				success: true,
+				id: input.id,
+				parentId: input.parentId,
+			}),
+	},
+	reorder: {
+		mutate: async (input: { parentId: string | null; orderedIds: string[] }) =>
+			callTrpcHttpOrThrow("folders.reorder", "POST", input, {
+				orderedIds: input.orderedIds,
+			}),
+	},
+	delete: {
+		mutate: async (input: { id: string; mode: "moveToParent" | "trashAll" }) =>
+			callTrpcHttpOrThrow("folders.delete", "POST", input, {
+				success: true,
+				id: input.id,
+			}),
+	},
+};
+
+const trashApi = {
+	list: {
+		query: async (): Promise<TrashItem[]> =>
+			callTrpcHttpOrThrow("trash.list", "GET", undefined, MOCK_TRASH),
+	},
+	restore: {
+		mutate: async (input: { id: string; type: TrashItemType }) =>
+			callTrpcHttpOrThrow("trash.restore", "POST", input, {
+				type: input.type,
+				id: input.id,
+				name: MOCK_TRASH.find((item) => item.id === input.id)?.name ?? "",
+				parentId: null as string | null,
+			}),
+	},
+	deletePermanently: {
+		mutate: async (input: { id: string; type: TrashItemType }) =>
+			callTrpcHttpOrThrow("trash.deletePermanently", "POST", input, {
+				success: true,
+				id: input.id,
+			}),
+	},
+	empty: {
+		mutate: async () =>
+			callTrpcHttpOrThrow("trash.empty", "POST", undefined, { success: true }),
+	},
+};
+
 export const trpc = {
+	notes: notesApi,
+	folders: foldersApi,
+	trash: trashApi,
 	auth: {
 		loginWithGoogle: {
 			mutate: async (input: { serverAuthCode: string; idToken?: string }) =>

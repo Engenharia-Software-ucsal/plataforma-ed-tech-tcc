@@ -1,528 +1,510 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import type { User } from "../src/db/schema/index.js";
 import {
-	courseMaterials,
-	noteLinks,
-	notes,
-	quizAttempts,
-	quizzes,
-} from "../src/db/schema/index.js";
-import { appRouter } from "../src/trpc/router.js";
+	callerFor,
+	createClassSession,
+	createTestDatabase,
+	createUser,
+	type TestDatabase,
+} from "./helpers/pglite-db.js";
 
-// Helper para extrair colunas e parâmetros das condições SQL do Drizzle
-function findParams(chunk: any, results: any[] = []): any[] {
-	if (!chunk) return results;
-	if (chunk.value !== undefined && !Array.isArray(chunk.value)) {
-		results.push(chunk.value);
-	}
-	if (Array.isArray(chunk.queryChunks)) {
-		for (const sub of chunk.queryChunks) findParams(sub, results);
-	}
-	return results;
-}
+let testDb: TestDatabase;
+let alice: User;
+let bob: User;
+let api: ReturnType<typeof callerFor>;
+let bobApi: ReturnType<typeof callerFor>;
 
-function findColumns(chunk: any, results: string[] = []): string[] {
-	if (!chunk) return results;
-	if (chunk.name && typeof chunk.name === "string") {
-		results.push(chunk.name);
-	}
-	if (Array.isArray(chunk.queryChunks)) {
-		for (const sub of chunk.queryChunks) findColumns(sub, results);
-	}
-	return results;
-}
+beforeAll(async () => {
+	testDb = await createTestDatabase();
+});
 
-const columnToProp: Record<string, string> = {
-	id: "id",
-	user_id: "userId",
-	class_session_id: "classSessionId",
-	source_note_id: "sourceNoteId",
-	target_note_id: "targetNoteId",
-	reason: "reason",
-	title: "title",
-	content: "content",
-};
+afterAll(async () => {
+	await testDb.close();
+});
 
-function hasOrOperator(cond: any): boolean {
-	if (!cond) return false;
-	if (
-		Array.isArray(cond.value) &&
-		cond.value.some((v: any) => typeof v === "string" && v.includes(" or "))
-	) {
-		return true;
-	}
-	if (Array.isArray(cond.queryChunks)) {
-		return cond.queryChunks.some((sub: any) => hasOrOperator(sub));
-	}
-	return false;
-}
+beforeEach(async () => {
+	await testDb.reset();
+	alice = await createUser(testDb.db, "Alice");
+	bob = await createUser(testDb.db, "Bob");
+	api = callerFor(testDb.db, alice);
+	bobApi = callerFor(testDb.db, bob);
+});
 
-function matchesCondition(item: any, cond: any): boolean {
-	if (!cond) return true;
-	const isOr = hasOrOperator(cond);
-	const cols = findColumns(cond);
-	const params = findParams(cond);
-
-	if (cols.length === 0 || params.length === 0) return true;
-
-	if (isOr) {
-		for (let i = 0; i < Math.min(cols.length, params.length); i++) {
-			const prop = columnToProp[cols[i]] ?? cols[i];
-			if (item[prop] === params[i]) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	for (let i = 0; i < Math.min(cols.length, params.length); i++) {
-		const prop = columnToProp[cols[i]] ?? cols[i];
-		if (item[prop] !== undefined && item[prop] !== params[i]) {
-			return false;
-		}
-	}
-	return true;
-}
-
-function createMockDatabase() {
-	const notesStore: any[] = [];
-	const linksStore: any[] = [];
-	const materialsStore: any[] = [];
-	const quizzesStore: any[] = [];
-	const attemptsStore: any[] = [];
-
-	function getStore(table: any) {
-		if (table === notes) return notesStore;
-		if (table === noteLinks) return linksStore;
-		if (table === courseMaterials) return materialsStore;
-		if (table === quizzes) return quizzesStore;
-		if (table === quizAttempts) return attemptsStore;
-		return notesStore;
-	}
-
-	return {
-		notesStore,
-		linksStore,
-		materialsStore,
-		quizzesStore,
-		attemptsStore,
-		insert: (table: any) => ({
-			values: (data: any) => ({
-				returning: async () => {
-					const store = getStore(table);
-					const item = {
-						id: data.id ?? crypto.randomUUID(),
-						createdAt: new Date(),
-						updatedAt: new Date(),
-						...data,
-					};
-					store.push(item);
-					return [item];
-				},
-			}),
-		}),
-		select: (fields?: any) => ({
-			from: (table: any) => {
-				const store = getStore(table);
-				return {
-					where: (cond: any) => {
-						const filtered = store.filter((item) =>
-							matchesCondition(item, cond),
-						);
-						const p: any = Promise.resolve(filtered);
-						p.orderBy = () => {
-							const ordered: any = Promise.resolve(filtered);
-							ordered.limit = async (n: number) => filtered.slice(0, n);
-							return ordered;
-						};
-						return p;
-					},
-					innerJoin: (joinTable: any, joinCond: any) => ({
-						where: (cond: any) => {
-							const links = linksStore.filter((l) => matchesCondition(l, cond));
-							const joined = links.map((l) => {
-								if (table === noteLinks && joinTable === notes) {
-									// link de saída (sourceNoteId = id) -> junta com targetNote
-									const targetNote = notesStore.find(
-										(n) => n.id === l.targetNoteId,
-									);
-									const sourceNote = notesStore.find(
-										(n) => n.id === l.sourceNoteId,
-									);
-									return {
-										...l,
-										targetNote: targetNote
-											? {
-													id: targetNote.id,
-													title: targetNote.title,
-													tags: targetNote.tags,
-													createdAt: targetNote.createdAt,
-												}
-											: null,
-										sourceNote: sourceNote
-											? {
-													id: sourceNote.id,
-													title: sourceNote.title,
-													tags: sourceNote.tags,
-													createdAt: sourceNote.createdAt,
-												}
-											: null,
-									};
-								}
-								return l;
-							});
-							return Promise.resolve(joined);
-						},
-					}),
-					orderBy: () => Promise.resolve([...store]),
-				};
-			},
-		}),
-		update: (table: any) => ({
-			set: (data: any) => ({
-				where: (cond: any) => ({
-					returning: async () => {
-						const store = getStore(table);
-						const index = store.findIndex((item) =>
-							matchesCondition(item, cond),
-						);
-						if (index === -1) return [];
-						store[index] = { ...store[index], ...data, updatedAt: new Date() };
-						return [store[index]];
-					},
-				}),
-			}),
-		}),
-		delete: (table: any) => ({
-			where: async (cond: any) => {
-				const store = getStore(table);
-				let i = store.length;
-				while (i--) {
-					if (matchesCondition(store[i], cond)) {
-						store.splice(i, 1);
-					}
-				}
-				return;
-			},
-		}),
-	};
-}
-
-describe("Notes tRPC Router", () => {
-	const mockUser = {
-		id: crypto.randomUUID(),
-		name: "Aluno de Engenharia",
-		email: "aluno@ucsal.edu.br",
-		avatarUrl: null,
-		googleId: "google-uid-123",
-		googleRefreshToken: null,
-		createdAt: new Date(),
-		updatedAt: new Date(),
-	};
-
-	let mockDb: ReturnType<typeof createMockDatabase>;
-	let caller: ReturnType<typeof appRouter.createCaller>;
-
-	beforeEach(() => {
-		mockDb = createMockDatabase();
-		caller = appRouter.createCaller({
-			db: mockDb as any,
-			user: mockUser,
-			req: {} as any,
-			res: {} as any,
+describe("autenticação e isolamento", () => {
+	it("exige usuário autenticado", async () => {
+		const anonymous = callerFor(testDb.db, null);
+		await expect(anonymous.notes.list()).rejects.toMatchObject({
+			code: "UNAUTHORIZED",
+		});
+		await expect(anonymous.notes.create({ title: "X" })).rejects.toMatchObject({
+			code: "UNAUTHORIZED",
 		});
 	});
 
-	it("should create a note with tags and return the created record", async () => {
-		const created = await caller.notes.create({
-			title: "Princípio Aberto-Fechado (OCP)",
-			content:
-				"Entidades devem ser abertas para extensão, mas fechadas para modificação.",
-			tags: ["solid", "arquitetura", "engenharia"],
+	it("não deixa um aluno ler, editar, mover, excluir ou vincular notas de outro", async () => {
+		const note = await api.notes.create({
+			title: "Privada",
+			content: "segredo",
+		});
+		const bobNote = await bobApi.notes.create({ title: "Do Bob" });
+
+		await expect(bobApi.notes.getById({ id: note.id })).rejects.toMatchObject({
+			code: "NOT_FOUND",
+		});
+		await expect(
+			bobApi.notes.update({ id: note.id, content: "x" }),
+		).rejects.toMatchObject({
+			code: "NOT_FOUND",
+		});
+		await expect(
+			bobApi.notes.move({ id: note.id, folderId: null }),
+		).rejects.toMatchObject({
+			code: "NOT_FOUND",
+		});
+		await expect(bobApi.notes.delete({ id: note.id })).rejects.toMatchObject({
+			code: "NOT_FOUND",
+		});
+		await expect(
+			bobApi.notes.addLink({
+				sourceNoteId: bobNote.id,
+				targetNoteId: note.id,
+				reason: "roubar",
+			}),
+		).rejects.toMatchObject({ code: "NOT_FOUND" });
+		await expect(
+			bobApi.notes.suggestLinks({ noteId: note.id }),
+		).rejects.toMatchObject({
+			code: "NOT_FOUND",
 		});
 
-		expect(created.id).toBeDefined();
-		expect(created.title).toBe("Princípio Aberto-Fechado (OCP)");
-		expect(created.tags).toEqual(["solid", "arquitetura", "engenharia"]);
-		expect(created.userId).toBe(mockUser.id);
-		expect(mockDb.notesStore.length).toBe(1);
+		expect((await bobApi.notes.list()).map((n) => n.id)).toEqual([bobNote.id]);
+		expect((await api.notes.getById({ id: note.id })).content).toBe("segredo");
 	});
 
-	it("should throw UNAUTHORIZED when user is not in context and no userId is provided", async () => {
-		const unauthCaller = appRouter.createCaller({
-			db: mockDb as any,
-			user: null,
-			req: {} as any,
-			res: {} as any,
+	it("não deixa criar nota numa pasta de outro aluno", async () => {
+		const folder = await bobApi.folders.create({ name: "Do Bob" });
+		await expect(
+			api.notes.create({ title: "X", folderId: folder.id }),
+		).rejects.toMatchObject({
+			code: "NOT_FOUND",
 		});
+	});
+});
+
+describe("títulos", () => {
+	it("apara o título e não deixa repetir, sem diferenciar caixa", async () => {
+		const created = await api.notes.create({ title: "  Clean Architecture  " });
+		expect(created.title).toBe("Clean Architecture");
 
 		await expect(
-			unauthCaller.notes.create({
-				title: "Sem usuário",
-				content: "Conteúdo sem autenticação",
-			}),
-		).rejects.toThrow("Usuário não autenticado");
+			api.notes.create({ title: "clean architecture" }),
+		).rejects.toMatchObject({
+			code: "CONFLICT",
+		});
+		const other = await api.notes.create({ title: "SOLID" });
+		await expect(
+			api.notes.update({ id: other.id, title: "CLEAN architecture" }),
+		).rejects.toMatchObject({ code: "CONFLICT" });
 	});
 
-	it("should list notes belonging to the authenticated user", async () => {
-		await caller.notes.create({
-			title: "Nota 1",
-			content: "Conteúdo 1",
-			tags: ["solid"],
-		});
-		await caller.notes.create({
-			title: "Nota 2",
-			content: "Conteúdo 2",
-			tags: ["patterns"],
-		});
-
-		const list = await caller.notes.list();
-		expect(list.length).toBe(2);
-
-		const filteredByTag = await caller.notes.list({ tag: "patterns" });
-		expect(filteredByTag.length).toBe(1);
-		expect(filteredByTag[0].title).toBe("Nota 2");
+	it("deixa outro aluno usar o mesmo título", async () => {
+		await api.notes.create({ title: "SOLID" });
+		await expect(
+			bobApi.notes.create({ title: "SOLID" }),
+		).resolves.toMatchObject({ title: "SOLID" });
 	});
 
-	it("should get a note by id with outbound and inbound links and reasons", async () => {
-		const noteA = await caller.notes.create({
-			title: "Nota A: Injeção de Dependência",
-			content: "Técnica para desacoplamento de módulos.",
-			tags: ["di", "solid"],
+	it("aceita mudar só a caixa do próprio título", async () => {
+		const note = await api.notes.create({ title: "solid" });
+		await expect(
+			api.notes.update({ id: note.id, title: "SOLID" }),
+		).resolves.toMatchObject({
+			title: "SOLID",
 		});
-
-		const noteB = await caller.notes.create({
-			title: "Nota B: Inversão de Controle",
-			content: "Framework assume o controle do fluxo da aplicação.",
-			tags: ["ioc", "solid"],
-		});
-
-		// Adicionar link de A para B com justificativa explícita (reason)
-		const link = await caller.notes.addLink({
-			sourceNoteId: noteA.id,
-			targetNoteId: noteB.id,
-			reason:
-				"A Injeção de Dependência é uma das principais formas práticas de implementar a Inversão de Controle.",
-		});
-
-		expect(link.id).toBeDefined();
-		expect(link.reason).toContain("Injeção de Dependência");
-
-		// Buscar Nota A (deve ter outboundLink para B)
-		const detailA = await caller.notes.getById({ id: noteA.id });
-		expect(detailA.id).toBe(noteA.id);
-		expect(detailA.outboundLinks.length).toBe(1);
-		expect(detailA.outboundLinks[0].targetNoteId).toBe(noteB.id);
-		expect(detailA.outboundLinks[0].reason).toBe(link.reason);
-
-		// Buscar Nota B (deve ter inboundLink vindo de A)
-		const detailB = await caller.notes.getById({ id: noteB.id });
-		expect(detailB.id).toBe(noteB.id);
-		expect(detailB.inboundLinks.length).toBe(1);
-		expect(detailB.inboundLinks[0].sourceNoteId).toBe(noteA.id);
-		expect(detailB.inboundLinks[0].reason).toBe(link.reason);
 	});
 
-	it("should throw NOT_FOUND when getting non-existent note", async () => {
-		const nonExistentId = crypto.randomUUID();
-		await expect(caller.notes.getById({ id: nonExistentId })).rejects.toThrow(
-			"Nota não encontrada",
+	it.each(["", "   ", "Com [colchete]", "A|B", "Seção #1"])(
+		"rejeita o título %j",
+		async (title) => {
+			await expect(api.notes.create({ title })).rejects.toMatchObject({
+				code: "BAD_REQUEST",
+			});
+		},
+	);
+
+	it("libera o título quando a nota vai para a lixeira", async () => {
+		const note = await api.notes.create({ title: "Rascunho" });
+		await api.notes.delete({ id: note.id });
+		await expect(
+			api.notes.create({ title: "Rascunho" }),
+		).resolves.toMatchObject({
+			title: "Rascunho",
+		});
+	});
+});
+
+describe("hashtag da matéria", () => {
+	it("cria, troca e remove a tag automática conforme a aula, sem mexer nas tags do aluno", async () => {
+		const engSoft = await createClassSession(
+			testDb.db,
+			"Engenharia de Software",
+		);
+		const bd = await createClassSession(testDb.db, "Banco de Dados II");
+
+		const note = await api.notes.create({
+			title: "Aula 1",
+			tags: ["prova"],
+			classSessionId: engSoft.id,
+		});
+		expect(note.autoTags).toEqual(["engenharia-de-software"]);
+		expect(note.tags).toEqual(["prova"]);
+
+		const moved = await api.notes.update({
+			id: note.id,
+			classSessionId: bd.id,
+		});
+		expect(moved.autoTags).toEqual(["banco-de-dados-ii"]);
+		expect(moved.tags).toEqual(["prova"]);
+
+		const unlinked = await api.notes.update({
+			id: note.id,
+			classSessionId: null,
+		});
+		expect(unlinked.autoTags).toEqual([]);
+		expect(unlinked.classSessionId).toBeNull();
+	});
+
+	it("filtra por tag do aluno ou tag automática", async () => {
+		const engSoft = await createClassSession(
+			testDb.db,
+			"Engenharia de Software",
+		);
+		const daAula = await api.notes.create({
+			title: "Da aula",
+			classSessionId: engSoft.id,
+		});
+		const doAluno = await api.notes.create({
+			title: "Do aluno",
+			tags: ["engenharia-de-software"],
+		});
+		await api.notes.create({ title: "Outra" });
+
+		const found = await api.notes.list({ tag: "engenharia-de-software" });
+		expect(found.map((n) => n.id).sort()).toEqual(
+			[daAula.id, doAluno.id].sort(),
 		);
 	});
 
-	it("should update a note title and content", async () => {
-		const created = await caller.notes.create({
-			title: "Título Inicial",
-			content: "Conteúdo Inicial",
-		});
-
-		const updated = await caller.notes.update({
-			id: created.id,
-			title: "Título Atualizado",
-			content: "Conteúdo Atualizado",
-		});
-
-		expect(updated.title).toBe("Título Atualizado");
-		expect(updated.content).toBe("Conteúdo Atualizado");
-	});
-
-	it("should delete a note and remove its associated links", async () => {
-		const noteA = await caller.notes.create({
-			title: "Nota A",
-			content: "Conteúdo",
-		});
-		const noteB = await caller.notes.create({
-			title: "Nota B",
-			content: "Conteúdo",
-		});
-
-		await caller.notes.addLink({
-			sourceNoteId: noteA.id,
-			targetNoteId: noteB.id,
-			reason: "Conexão de teste para deleção.",
-		});
-
-		expect(mockDb.linksStore.length).toBe(1);
-
-		const deleteResult = await caller.notes.delete({ id: noteA.id });
-		expect(deleteResult.success).toBe(true);
-		expect(mockDb.notesStore.length).toBe(1);
-		expect(mockDb.linksStore.length).toBe(0);
-	});
-
-	it("should require reason with at least 3 characters when adding link", async () => {
-		const noteA = await caller.notes.create({
-			title: "Nota A",
-			content: "Conteúdo",
-		});
-		const noteB = await caller.notes.create({
-			title: "Nota B",
-			content: "Conteúdo",
-		});
-
-		// Deve falhar com razão de menos de 3 caracteres
+	it("recusa aula inexistente", async () => {
 		await expect(
-			caller.notes.addLink({
-				sourceNoteId: noteA.id,
-				targetNoteId: noteB.id,
-				reason: "ok", // apenas 2 caracteres
-			}),
-		).rejects.toThrow();
+			api.notes.create({ title: "X", classSessionId: crypto.randomUUID() }),
+		).rejects.toMatchObject({ code: "BAD_REQUEST" });
+	});
+});
 
-		// Deve funcionar com 3 ou mais caracteres
-		const link = await caller.notes.addLink({
-			sourceNoteId: noteA.id,
-			targetNoteId: noteB.id,
-			reason: "Vínculo conceitual válido",
+describe("wikilinks", () => {
+	it("cria vínculos a partir do texto e mostra backlinks", async () => {
+		const target = await api.notes.create({ title: "Inversão de Dependência" });
+		const source = await api.notes.create({
+			title: "Arquitetura Hexagonal",
+			content: "Depende de [[inversão de dependência|DIP]] e de [[Ports]].",
 		});
-		expect(link.reason).toBe("Vínculo conceitual válido");
+
+		const detail = await api.notes.getById({ id: source.id });
+		expect(detail.outboundLinks).toHaveLength(1);
+		expect(detail.outboundLinks[0]).toMatchObject({
+			targetNoteId: target.id,
+			linkType: "wikilink",
+			reason: null,
+		});
+		expect(detail.wikilinks).toEqual([
+			{ title: "inversão de dependência", noteId: target.id },
+			{ title: "Ports", noteId: null },
+		]);
+
+		const targetDetail = await api.notes.getById({ id: target.id });
+		expect(targetDetail.inboundLinks.map((l) => l.sourceNoteId)).toEqual([
+			source.id,
+		]);
 	});
 
-	it("should reject linking a note to itself", async () => {
-		const noteA = await caller.notes.create({
-			title: "Nota Auto",
-			content: "Conteúdo",
+	it("resolve links pendentes quando a nota com aquele título passa a existir", async () => {
+		const source = await api.notes.create({
+			title: "Origem",
+			content: "ver [[Futura]]",
 		});
+		expect(
+			(await api.notes.getById({ id: source.id })).outboundLinks,
+		).toHaveLength(0);
+
+		const created = await api.notes.create({ title: "Futura" });
+		expect(created.affectedNoteIds).toEqual([source.id]);
+		const detail = await api.notes.getById({ id: source.id });
+		expect(detail.outboundLinks.map((l) => l.targetNoteId)).toEqual([
+			created.id,
+		]);
+	});
+
+	it("ignora links em código, para a própria nota e repetidos", async () => {
+		const target = await api.notes.create({ title: "Alvo" });
+		const source = await api.notes.create({
+			title: "Fonte",
+			content: "`[[Alvo]]`\n```\n[[Alvo]]\n```\n[[Fonte]] [[Alvo]] [[alvo]]",
+		});
+		const detail = await api.notes.getById({ id: source.id });
+		expect(detail.outboundLinks.map((l) => l.targetNoteId)).toEqual([
+			target.id,
+		]);
+	});
+
+	it("remove o vínculo quando o link sai do texto", async () => {
+		await api.notes.create({ title: "Alvo" });
+		const source = await api.notes.create({
+			title: "Fonte",
+			content: "[[Alvo]]",
+		});
+		await api.notes.update({ id: source.id, content: "sem link" });
+		expect(
+			(await api.notes.getById({ id: source.id })).outboundLinks,
+		).toHaveLength(0);
+	});
+
+	it("propaga a renomeação para as notas que apontam para ela, mantendo apelido e seção", async () => {
+		const target = await api.notes.create({ title: "Antigo" });
+		const source = await api.notes.create({
+			title: "Fonte",
+			content:
+				"[[Antigo]], [[antigo|apelido]] e [[Antigo#Intro]]; `[[Antigo]]` fica.",
+		});
+
+		const renamed = await api.notes.update({ id: target.id, title: "Novo" });
+		expect(renamed.affectedNoteIds).toContain(source.id);
+
+		const detail = await api.notes.getById({ id: source.id });
+		expect(detail.content).toBe(
+			"[[Novo]], [[Novo|apelido]] e [[Novo#Intro]]; `[[Antigo]]` fica.",
+		);
+		expect(detail.outboundLinks.map((l) => l.targetNoteId)).toEqual([
+			target.id,
+		]);
+	});
+
+	it("ao renomear, também resolve links que já esperavam o título novo", async () => {
+		const waiting = await api.notes.create({
+			title: "Esperando",
+			content: "[[Destino Final]]",
+		});
+		const note = await api.notes.create({ title: "Rascunho" });
+		const renamed = await api.notes.update({
+			id: note.id,
+			title: "Destino Final",
+		});
+		expect(renamed.affectedNoteIds).toContain(waiting.id);
+		expect(
+			(await api.notes.getById({ id: waiting.id })).outboundLinks,
+		).toHaveLength(1);
+	});
+
+	it("esconde vínculos com notas na lixeira e os devolve ao restaurar", async () => {
+		const target = await api.notes.create({ title: "Alvo" });
+		const source = await api.notes.create({
+			title: "Fonte",
+			content: "[[Alvo]]",
+		});
+
+		await api.notes.delete({ id: target.id });
+		const detail = await api.notes.getById({ id: source.id });
+		expect(detail.outboundLinks).toHaveLength(0);
+		expect(detail.wikilinks).toEqual([{ title: "Alvo", noteId: null }]);
+
+		await api.trash.restore({ id: target.id, type: "note" });
+		expect(
+			(await api.notes.getById({ id: source.id })).outboundLinks,
+		).toHaveLength(1);
+	});
+});
+
+describe("vínculos semânticos", () => {
+	it("convive com o wikilink do mesmo par e recusa repetidos", async () => {
+		const target = await api.notes.create({ title: "Alvo" });
+		const source = await api.notes.create({
+			title: "Fonte",
+			content: "[[Alvo]]",
+		});
+
+		const manual = await api.notes.addLink({
+			sourceNoteId: source.id,
+			targetNoteId: target.id,
+			reason: "Mesmo conceito",
+		});
+		expect(manual?.linkType).toBe("manual");
 
 		await expect(
-			caller.notes.addLink({
-				sourceNoteId: noteA.id,
-				targetNoteId: noteA.id,
-				reason: "Tentativa de auto-vínculo",
+			api.notes.addLink({
+				sourceNoteId: source.id,
+				targetNoteId: target.id,
+				reason: "De novo",
+				linkType: "ai_suggested",
 			}),
-		).rejects.toThrow("Uma nota não pode ser vinculada a ela mesma");
+		).rejects.toMatchObject({ code: "CONFLICT" });
+
+		const detail = await api.notes.getById({ id: source.id });
+		expect(detail.outboundLinks.map((l) => l.linkType).sort()).toEqual([
+			"manual",
+			"wikilink",
+		]);
+
+		const [summary] = (await api.notes.list()).filter(
+			(n) => n.id === source.id,
+		);
+		expect(summary?.linkCount).toBe(1);
 	});
 
-	it("should reject duplicate links between the same notes", async () => {
-		const noteA = await caller.notes.create({
-			title: "Nota A",
-			content: "Conteúdo",
+	it("não remove vínculo de wikilink pela API", async () => {
+		await api.notes.create({ title: "Alvo" });
+		const source = await api.notes.create({
+			title: "Fonte",
+			content: "[[Alvo]]",
 		});
-		const noteB = await caller.notes.create({
-			title: "Nota B",
-			content: "Conteúdo",
+		const [link] = (await api.notes.getById({ id: source.id })).outboundLinks;
+		await expect(
+			api.notes.removeLink({ id: link?.id as string }),
+		).rejects.toMatchObject({
+			code: "BAD_REQUEST",
 		});
+	});
 
-		await caller.notes.addLink({
-			sourceNoteId: noteA.id,
-			targetNoteId: noteB.id,
-			reason: "Primeiro vínculo",
+	it("valida justificativa e auto-vínculo", async () => {
+		const a = await api.notes.create({ title: "A" });
+		const b = await api.notes.create({ title: "B" });
+		await expect(
+			api.notes.addLink({
+				sourceNoteId: a.id,
+				targetNoteId: b.id,
+				reason: "x",
+			}),
+		).rejects.toMatchObject({ code: "BAD_REQUEST" });
+		await expect(
+			api.notes.addLink({
+				sourceNoteId: a.id,
+				targetNoteId: a.id,
+				reason: "mesma",
+			}),
+		).rejects.toMatchObject({ code: "BAD_REQUEST" });
+	});
+
+	it("sugere notas com tags em comum, ignorando as que estão na lixeira", async () => {
+		const a = await api.notes.create({
+			title: "Factory",
+			tags: ["design-patterns"],
 		});
+		const b = await api.notes.create({
+			title: "Strategy",
+			tags: ["design-patterns"],
+		});
+		const c = await api.notes.create({
+			title: "Observer",
+			tags: ["design-patterns"],
+		});
+		await api.notes.delete({ id: c.id });
+
+		const suggestions = await api.notes.suggestLinks({ noteId: a.id });
+		expect(suggestions.map((s) => s.targetNoteId)).toEqual([b.id]);
+		expect(suggestions[0]?.reason).toContain("design-patterns");
+	});
+});
+
+describe("salvamento", () => {
+	it("recusa com CONFLICT quando a nota mudou depois da versão que o app tinha", async () => {
+		const note = await api.notes.create({ title: "Nota", content: "v1" });
+		const firstSave = await api.notes.update({
+			id: note.id,
+			content: "v2",
+			expectedUpdatedAt: new Date(note.updatedAt).toISOString(),
+		});
+		expect(firstSave.content).toBe("v2");
 
 		await expect(
-			caller.notes.addLink({
-				sourceNoteId: noteA.id,
-				targetNoteId: noteB.id,
-				reason: "Tentativa de vínculo duplicado",
+			api.notes.update({
+				id: note.id,
+				content: "v3 de outro aparelho",
+				expectedUpdatedAt: new Date(
+					new Date(firstSave.updatedAt).getTime() - 60_000,
+				).toISOString(),
 			}),
-		).rejects.toThrow("Este vínculo já existe entre as notas");
+		).rejects.toMatchObject({ code: "CONFLICT" });
+
+		// "Manter minha versão": salva sem a data esperada.
+		await expect(
+			api.notes.update({ id: note.id, content: "v3" }),
+		).resolves.toMatchObject({
+			content: "v3",
+		});
 	});
 
-	it("should suggest links based on shared tags", async () => {
-		const noteA = await caller.notes.create({
-			title: "Factory Method",
-			content: "Padrão criacional de objetos.",
-			tags: ["design-patterns", "gof"],
-		});
+	it("recusa conteúdo acima do limite", async () => {
+		await expect(
+			api.notes.create({ title: "Grande", content: "a".repeat(200_001) }),
+		).rejects.toMatchObject({ code: "BAD_REQUEST" });
+	});
+});
 
-		const noteB = await caller.notes.create({
-			title: "Abstract Factory",
-			content: "Famílias de objetos relacionados.",
-			tags: ["design-patterns", "criacional"],
-		});
+describe("organização", () => {
+	it("move entre pastas e reordena renumerando os irmãos", async () => {
+		const folder = await api.folders.create({ name: "Aulas" });
+		const a = await api.notes.create({ title: "A" });
+		const b = await api.notes.create({ title: "B" });
+		const c = await api.notes.create({ title: "C" });
 
-		const suggestions = await caller.notes.suggestLinks({ noteId: noteA.id });
-		expect(suggestions.length).toBe(1);
-		expect(suggestions[0].targetNoteId).toBe(noteB.id);
-		expect(suggestions[0].reason).toContain("design-patterns");
-		expect(suggestions[0].linkType).toBe("ai_suggested");
+		const rootOrder = async () =>
+			(await api.notes.list({ folderId: null })).map((n) => n.title);
+		expect(await rootOrder()).toEqual(["A", "B", "C"]);
+
+		await api.notes.reorder({ folderId: null, orderedIds: [c.id, a.id] });
+		expect(await rootOrder()).toEqual(["C", "A", "B"]);
+
+		await api.notes.move({ id: a.id, folderId: folder.id });
+		expect(await rootOrder()).toEqual(["C", "B"]);
+		expect(
+			(await api.notes.list({ folderId: folder.id })).map((n) => n.title),
+		).toEqual(["A"]);
+
+		await api.notes.move({ id: b.id, folderId: folder.id, position: 0 });
+		expect(
+			(await api.notes.list({ folderId: folder.id })).map((n) => n.title),
+		).toEqual(["B", "A"]);
+		const positions = (await api.notes.list({ folderId: folder.id })).map(
+			(n) => n.position,
+		);
+		expect(positions).toEqual([0, 1]);
 	});
 
-	it("should list materials and submit quiz attempts", async () => {
-		const classSessionId = crypto.randomUUID();
-
-		mockDb.materialsStore.push({
-			id: crypto.randomUUID(),
-			classSessionId,
-			title: "Apostila de Engenharia de Software.pdf",
-			fileUrl: "https://storage.ucsal.br/apostila.pdf",
-			materialType: "pdf",
-			summary: "Resumo sobre processos ágeis",
-			createdAt: new Date(),
+	it("não move para pasta na lixeira", async () => {
+		const folder = await api.folders.create({ name: "Velha" });
+		const note = await api.notes.create({ title: "Nota" });
+		await api.folders.delete({ id: folder.id, mode: "trashAll" });
+		await expect(
+			api.notes.move({ id: note.id, folderId: folder.id }),
+		).rejects.toMatchObject({
+			code: "NOT_FOUND",
 		});
+	});
 
-		const materials = await caller.materials.listByClass({ classSessionId });
-		expect(materials.length).toBe(1);
-		expect(materials[0].title).toBe("Apostila de Engenharia de Software.pdf");
-
-		const quizId = crypto.randomUUID();
-		const correctOptionId = crypto.randomUUID();
-		mockDb.quizzesStore.push({
-			id: quizId,
-			classSessionId,
-			title: "Quiz 1 - Arquitetura de Software",
-			difficulty: "medio",
-			questionsJson: [
-				{
-					id: "q1",
-					topic: "SOLID",
-					text: "O que é OCP?",
-					explanation: "OCP é o Princípio Aberto-Fechado.",
-					sourceExcerpt: "Resumo sobre processos ágeis",
-					options: [
-						{
-							id: correctOptionId,
-							text: "Aberto para extensão, fechado para modificação",
-							correct: true,
-						},
-						{
-							id: crypto.randomUUID(),
-							text: "Outra alternativa",
-							correct: false,
-						},
-					],
-				},
-			],
-			createdAt: new Date(),
+	it("busca por título ou conteúdo e ignora a lixeira", async () => {
+		await api.notes.create({ title: "Normalização", content: "3FN" });
+		await api.notes.create({
+			title: "Índices",
+			content: "B-Tree e 50% de ganho",
 		});
+		const trashed = await api.notes.create({ title: "Normalização antiga" });
+		await api.notes.delete({ id: trashed.id });
 
-		const quiz = await caller.quiz.getByClass({ classSessionId });
-		expect(quiz?.id).toBe(quizId);
-		// O gabarito vai junto: o app decide quando mostrá-lo
-		const publicQuestion = quiz?.questionsJson?.[0] as {
-			options: Array<{ correct?: boolean }>;
-		};
-		expect(publicQuestion.options[0]).toHaveProperty("correct");
-
-		const attempt = await caller.quiz.submitAttempt({
-			quizId,
-			answers: [{ questionId: "q1", optionId: correctOptionId }],
-			timeSpentSeconds: 120,
-		});
-
-		expect(attempt.correct).toBe(1);
-		expect(attempt.total).toBe(1);
-		expect(attempt.score).toBe(100);
-		expect(mockDb.attemptsStore[0].userId).toBe(mockUser.id);
-		expect(mockDb.attemptsStore[0].timeSpentSeconds).toBe(120);
+		expect(
+			(await api.notes.list({ search: "normaliz" })).map((n) => n.title),
+		).toEqual(["Normalização"]);
+		// `%` é texto, não curinga.
+		expect(
+			(await api.notes.list({ search: "50%" })).map((n) => n.title),
+		).toEqual(["Índices"]);
 	});
 });

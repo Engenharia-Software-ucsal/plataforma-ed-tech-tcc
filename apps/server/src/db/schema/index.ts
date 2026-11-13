@@ -16,13 +16,20 @@ export {
 	type NewCourseMaterial,
 } from "./course-materials.js";
 export {
+	type Folder,
+	folders,
+	type NewFolder,
+} from "./folders.js";
+export {
 	type MaterialChunk,
 	materialChunks,
 	type NewMaterialChunk,
 } from "./material-chunks.js";
 export {
 	type NewNoteLink,
+	NOTE_LINK_TYPES,
 	type NoteLink,
+	type NoteLinkType,
 	noteLinks,
 } from "./note-links.js";
 export {

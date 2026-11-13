@@ -1,42 +1,138 @@
+import {
+	NOTE_CONTENT_MAX_LENGTH,
+	titleKey,
+	validateNoteTitle,
+} from "@busuucsal-v3/notes";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import {
+	and,
+	arrayContains,
+	asc,
+	desc,
+	eq,
+	ilike,
+	isNull,
+	ne,
+	or,
+	type SQL,
+} from "drizzle-orm";
 import { z } from "zod";
 import { noteLinks, notes } from "../db/schema/index.js";
-import { publicProcedure, router } from "../trpc/index.js";
+import {
+	badRequest,
+	conflict,
+	escapeLike,
+	isUniqueViolation,
+	notFound,
+} from "../services/notes/db.js";
+import { requireDestination } from "../services/notes/folders.service.js";
+import {
+	assertTitleAvailable,
+	autoTagsForClass,
+	linkCounts,
+	propagateRename,
+	requireActiveNote,
+	resolveWikilinkTargets,
+	resyncNotesMentioning,
+	syncWikilinks,
+	toSummary,
+} from "../services/notes/notes.service.js";
+import {
+	compactSiblings,
+	nextPosition,
+	placeItem,
+	reorderSiblings,
+} from "../services/notes/ordering.service.js";
+import { trashNote } from "../services/notes/trash.service.js";
+import { protectedProcedure, router } from "../trpc/index.js";
+
+const titleInput = z.string().max(1000);
+const contentInput = z
+	.string()
+	.max(NOTE_CONTENT_MAX_LENGTH, "A nota passou do tamanho máximo (200 KB).");
+const tagsInput = z.array(z.string().trim().min(1).max(60)).max(50);
+
+function validTitle(raw: string): string {
+	const result = validateNoteTitle(raw);
+	if (!result.ok) throw badRequest(result.error);
+	return result.value;
+}
+
+/** Tags do aluno sem repetição (sem diferenciar caixa), na ordem em que vieram. */
+function cleanTags(tags: string[]): string[] {
+	const seen = new Set<string>();
+	return tags.filter((tag) => {
+		const key = tag.toLowerCase();
+		if (seen.has(key)) return false;
+		seen.add(key);
+		return true;
+	});
+}
+
+function rethrowTitleConflict(error: unknown, title: string): never {
+	if (isUniqueViolation(error))
+		throw conflict(`Já existe uma nota chamada "${title}".`);
+	throw error;
+}
+
+const linkedNoteFields = {
+	id: notes.id,
+	title: notes.title,
+	tags: notes.tags,
+	createdAt: notes.createdAt,
+};
+
+const linkFields = {
+	id: noteLinks.id,
+	sourceNoteId: noteLinks.sourceNoteId,
+	targetNoteId: noteLinks.targetNoteId,
+	similarityScore: noteLinks.similarityScore,
+	linkType: noteLinks.linkType,
+	reason: noteLinks.reason,
+	createdAt: noteLinks.createdAt,
+};
 
 export const notesRouter = router({
-	list: publicProcedure
+	/** Notas ativas do aluno. Sem `folderId`, de todas as pastas; `null` = raiz. */
+	list: protectedProcedure
 		.input(
 			z
 				.object({
+					folderId: z.string().uuid().nullable().optional(),
 					classSessionId: z.string().uuid().optional(),
 					tag: z.string().optional(),
 					search: z.string().optional(),
-					userId: z.string().uuid().optional(),
 				})
 				.optional(),
 		)
 		.query(async ({ ctx, input }) => {
-			const userId = ctx.user?.id ?? input?.userId;
-			if (!userId) {
-				throw new TRPCError({
-					code: "UNAUTHORIZED",
-					message: "Usuário não autenticado",
-				});
+			const conditions: Array<SQL | undefined> = [
+				eq(notes.userId, ctx.user.id),
+				isNull(notes.deletedAt),
+			];
+			if (input?.folderId !== undefined) {
+				conditions.push(
+					input.folderId === null
+						? isNull(notes.folderId)
+						: eq(notes.folderId, input.folderId),
+				);
 			}
-
-			const conditions = [eq(notes.userId, userId)];
-
 			if (input?.classSessionId) {
 				conditions.push(eq(notes.classSessionId, input.classSessionId));
 			}
-
-			if (input?.search) {
+			if (input?.tag) {
 				conditions.push(
 					or(
-						ilike(notes.title, `%${input.search}%`),
-						ilike(notes.content, `%${input.search}%`),
-					)!,
+						arrayContains(notes.tags, [input.tag]),
+						arrayContains(notes.autoTags, [input.tag]),
+					),
+				);
+			}
+			const search = input?.search?.trim();
+			if (search) {
+				const pattern = `%${escapeLike(search)}%`;
+				conditions.push(
+					or(ilike(notes.title, pattern), ilike(notes.content, pattern)),
 				);
 			}
 
@@ -44,326 +140,386 @@ export const notesRouter = router({
 				.select()
 				.from(notes)
 				.where(and(...conditions))
-				.orderBy(desc(notes.updatedAt));
-
-			if (input?.tag) {
-				return results.filter((note) => note.tags.includes(input.tag!));
-			}
-
-			return results;
+				.orderBy(
+					...(input?.folderId !== undefined
+						? [asc(notes.position), asc(notes.title)]
+						: [desc(notes.updatedAt)]),
+				);
+			const counts = await linkCounts(
+				ctx.db,
+				results.map((note) => note.id),
+			);
+			return results.map((note) => toSummary(note, counts.get(note.id) ?? 0));
 		}),
 
-	getById: publicProcedure
-		.input(
-			z.object({
-				id: z.string().uuid(),
-			}),
-		)
+	getById: protectedProcedure
+		.input(z.object({ id: z.string().uuid() }))
 		.query(async ({ ctx, input }) => {
-			const [note] = await ctx.db
-				.select()
-				.from(notes)
-				.where(eq(notes.id, input.id));
+			const note = await requireActiveNote(ctx.db, ctx.user.id, input.id);
 
-			if (!note) {
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message: "Nota não encontrada",
-				});
-			}
+			const outbound = (
+				await ctx.db
+					.select({ ...linkFields, targetNote: linkedNoteFields })
+					.from(noteLinks)
+					.innerJoin(notes, eq(noteLinks.targetNoteId, notes.id))
+					.where(
+						and(eq(noteLinks.sourceNoteId, note.id), isNull(notes.deletedAt)),
+					)
+			).map(({ targetNote, ...link }) => ({ ...link, targetNote }));
 
-			const outbound = await ctx.db
-				.select({
-					id: noteLinks.id,
-					sourceNoteId: noteLinks.sourceNoteId,
-					targetNoteId: noteLinks.targetNoteId,
-					similarityScore: noteLinks.similarityScore,
-					linkType: noteLinks.linkType,
-					reason: noteLinks.reason,
-					createdAt: noteLinks.createdAt,
-					targetNote: {
-						id: notes.id,
-						title: notes.title,
-						tags: notes.tags,
-						createdAt: notes.createdAt,
-					},
-				})
-				.from(noteLinks)
-				.innerJoin(notes, eq(noteLinks.targetNoteId, notes.id))
-				.where(eq(noteLinks.sourceNoteId, input.id));
-
-			const inbound = await ctx.db
-				.select({
-					id: noteLinks.id,
-					sourceNoteId: noteLinks.sourceNoteId,
-					targetNoteId: noteLinks.targetNoteId,
-					similarityScore: noteLinks.similarityScore,
-					linkType: noteLinks.linkType,
-					reason: noteLinks.reason,
-					createdAt: noteLinks.createdAt,
-					sourceNote: {
-						id: notes.id,
-						title: notes.title,
-						tags: notes.tags,
-						createdAt: notes.createdAt,
-					},
-				})
-				.from(noteLinks)
-				.innerJoin(notes, eq(noteLinks.sourceNoteId, notes.id))
-				.where(eq(noteLinks.targetNoteId, input.id));
+			const inbound = (
+				await ctx.db
+					.select({ ...linkFields, sourceNote: linkedNoteFields })
+					.from(noteLinks)
+					.innerJoin(notes, eq(noteLinks.sourceNoteId, notes.id))
+					.where(
+						and(eq(noteLinks.targetNoteId, note.id), isNull(notes.deletedAt)),
+					)
+			).map(({ sourceNote, ...link }) => ({ ...link, sourceNote }));
 
 			return {
 				...note,
 				outboundLinks: outbound,
 				inboundLinks: inbound,
+				wikilinks: await resolveWikilinkTargets(
+					ctx.db,
+					ctx.user.id,
+					note.content,
+				),
 			};
 		}),
 
-	create: publicProcedure
+	create: protectedProcedure
 		.input(
 			z.object({
-				title: z.string().min(1, "Título é obrigatório"),
-				content: z.string(),
-				tags: z.array(z.string()).optional().default([]),
+				title: titleInput,
+				content: contentInput.optional().default(""),
+				tags: tagsInput.optional().default([]),
 				classSessionId: z.string().uuid().optional(),
-				userId: z.string().uuid().optional(),
+				folderId: z.string().uuid().nullable().optional(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			const userId = ctx.user?.id ?? input.userId;
-			if (!userId) {
-				throw new TRPCError({
-					code: "UNAUTHORIZED",
-					message: "Usuário não autenticado",
+			const userId = ctx.user.id;
+			const title = validTitle(input.title);
+
+			try {
+				return await ctx.db.transaction(async (tx) => {
+					const folderId = await requireDestination(tx, userId, input.folderId);
+					await assertTitleAvailable(tx, userId, title);
+					const autoTags = await autoTagsForClass(
+						tx,
+						input.classSessionId ?? null,
+					);
+					const position = await nextPosition(tx, "note", userId, folderId);
+
+					const [created] = await tx
+						.insert(notes)
+						.values({
+							userId,
+							title,
+							content: input.content,
+							tags: cleanTags(input.tags),
+							autoTags,
+							classSessionId: input.classSessionId,
+							folderId,
+							position,
+						})
+						.returning();
+					if (!created) throw new Error("Falha ao criar a nota");
+
+					await syncWikilinks(tx, userId, created.id, created.content);
+					const affectedNoteIds = await resyncNotesMentioning(
+						tx,
+						userId,
+						title,
+						created.id,
+					);
+					return {
+						...toSummary(created),
+						content: created.content,
+						affectedNoteIds,
+					};
 				});
+			} catch (error) {
+				rethrowTitleConflict(error, title);
 			}
-
-			const [created] = await ctx.db
-				.insert(notes)
-				.values({
-					userId,
-					title: input.title,
-					content: input.content,
-					tags: input.tags,
-					classSessionId: input.classSessionId,
-				})
-				.returning();
-
-			return created;
 		}),
 
-	update: publicProcedure
+	/**
+	 * Salva a nota. Com `expectedUpdatedAt`, recusa (CONFLICT) se a nota mudou
+	 * no servidor depois dessa data — o app então pergunta qual versão manter.
+	 */
+	update: protectedProcedure
 		.input(
 			z.object({
 				id: z.string().uuid(),
-				title: z.string().min(1).optional(),
-				content: z.string().optional(),
-				tags: z.array(z.string()).optional(),
+				title: titleInput.optional(),
+				content: contentInput.optional(),
+				tags: tagsInput.optional(),
 				classSessionId: z.string().uuid().nullable().optional(),
+				expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			const [existing] = await ctx.db
-				.select()
-				.from(notes)
-				.where(eq(notes.id, input.id));
+			const userId = ctx.user.id;
+			const title =
+				input.title === undefined ? undefined : validTitle(input.title);
 
-			if (!existing) {
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message: "Nota não encontrada",
+			try {
+				return await ctx.db.transaction(async (tx) => {
+					const existing = await requireActiveNote(tx, userId, input.id);
+
+					if (
+						input.expectedUpdatedAt &&
+						existing.updatedAt.getTime() >
+							new Date(input.expectedUpdatedAt).getTime()
+					) {
+						throw new TRPCError({
+							code: "CONFLICT",
+							message:
+								"Esta nota foi alterada em outro lugar depois que você começou a editar.",
+						});
+					}
+
+					const titleChanged = title !== undefined && title !== existing.title;
+					if (titleChanged && titleKey(title) !== titleKey(existing.title)) {
+						await assertTitleAvailable(tx, userId, title, existing.id);
+					}
+
+					const updateData: Partial<typeof notes.$inferInsert> = {
+						updatedAt: new Date(),
+					};
+					if (titleChanged) updateData.title = title;
+					if (input.content !== undefined) updateData.content = input.content;
+					if (input.tags !== undefined) updateData.tags = cleanTags(input.tags);
+					if (input.classSessionId !== undefined) {
+						updateData.classSessionId = input.classSessionId;
+						updateData.autoTags = await autoTagsForClass(
+							tx,
+							input.classSessionId,
+						);
+					}
+
+					const [updated] = await tx
+						.update(notes)
+						.set(updateData)
+						.where(eq(notes.id, existing.id))
+						.returning();
+					if (!updated) throw notFound("Nota não encontrada");
+
+					const affected = new Set<string>();
+					if (
+						input.content !== undefined &&
+						input.content !== existing.content
+					) {
+						await syncWikilinks(tx, userId, updated.id, updated.content);
+					}
+					if (titleChanged) {
+						for (const id of await propagateRename(
+							tx,
+							userId,
+							updated.id,
+							existing.title,
+							updated.title,
+						)) {
+							affected.add(id);
+						}
+						for (const id of await resyncNotesMentioning(
+							tx,
+							userId,
+							updated.title,
+							updated.id,
+						)) {
+							affected.add(id);
+						}
+					}
+
+					return {
+						...toSummary(updated),
+						content: updated.content,
+						affectedNoteIds: [...affected],
+					};
 				});
+			} catch (error) {
+				rethrowTitleConflict(error, title ?? "");
 			}
-
-			const updateData: Partial<typeof notes.$inferInsert> = {
-				updatedAt: new Date(),
-			};
-			if (input.title !== undefined) updateData.title = input.title;
-			if (input.content !== undefined) updateData.content = input.content;
-			if (input.tags !== undefined) updateData.tags = input.tags;
-			if (input.classSessionId !== undefined)
-				updateData.classSessionId = input.classSessionId;
-
-			const [updated] = await ctx.db
-				.update(notes)
-				.set(updateData)
-				.where(eq(notes.id, input.id))
-				.returning();
-
-			return updated;
 		}),
 
-	delete: publicProcedure
-		.input(
-			z.object({
-				id: z.string().uuid(),
-			}),
-		)
+	/** Envia a nota para a lixeira. Os vínculos ficam guardados para voltar ao restaurar. */
+	delete: protectedProcedure
+		.input(z.object({ id: z.string().uuid() }))
 		.mutation(async ({ ctx, input }) => {
-			const [existing] = await ctx.db
-				.select()
-				.from(notes)
-				.where(eq(notes.id, input.id));
-
-			if (!existing) {
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message: "Nota não encontrada",
-				});
-			}
-
-			await ctx.db
-				.delete(noteLinks)
-				.where(
-					or(
-						eq(noteLinks.sourceNoteId, input.id),
-						eq(noteLinks.targetNoteId, input.id),
-					),
-				);
-
-			await ctx.db.delete(notes).where(eq(notes.id, input.id));
-
+			await ctx.db.transaction(async (tx) => {
+				const note = await requireActiveNote(tx, ctx.user.id, input.id);
+				await trashNote(tx, note.id);
+				await compactSiblings(tx, "note", ctx.user.id, note.folderId);
+			});
 			return { success: true, id: input.id };
 		}),
 
-	addLink: publicProcedure
+	/** Move a nota para outra pasta (`null` = raiz), opcionalmente numa posição. */
+	move: protectedProcedure
+		.input(
+			z.object({
+				id: z.string().uuid(),
+				folderId: z.string().uuid().nullable(),
+				position: z.number().int().min(0).optional(),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			const userId = ctx.user.id;
+			return ctx.db.transaction(async (tx) => {
+				const note = await requireActiveNote(tx, userId, input.id);
+				const folderId = await requireDestination(tx, userId, input.folderId);
+				if (note.folderId !== folderId) {
+					await tx
+						.update(notes)
+						.set({ folderId, updatedAt: new Date() })
+						.where(eq(notes.id, note.id));
+				}
+				await placeItem(tx, "note", userId, folderId, note.id, input.position);
+				if (note.folderId !== folderId) {
+					await compactSiblings(tx, "note", userId, note.folderId);
+				}
+				return { success: true, id: note.id, folderId };
+			});
+		}),
+
+	/** Reordena as notas de uma pasta. */
+	reorder: protectedProcedure
+		.input(
+			z.object({
+				folderId: z.string().uuid().nullable(),
+				orderedIds: z.array(z.string().uuid()).max(1000),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			const userId = ctx.user.id;
+			return ctx.db.transaction(async (tx) => {
+				await requireDestination(tx, userId, input.folderId);
+				const orderedIds = await reorderSiblings(
+					tx,
+					"note",
+					userId,
+					input.folderId,
+					input.orderedIds,
+				);
+				return { orderedIds };
+			});
+		}),
+
+	/** Vínculo semântico (manual ou sugerido pela IA), com justificativa. */
+	addLink: protectedProcedure
 		.input(
 			z.object({
 				sourceNoteId: z.string().uuid(),
 				targetNoteId: z.string().uuid(),
 				reason: z
 					.string()
+					.trim()
 					.min(3, "A justificativa deve ter no mínimo 3 caracteres"),
-				linkType: z.enum(["manual", "ai_suggested"]).default("manual").optional(),
+				linkType: z
+					.enum(["manual", "ai_suggested"])
+					.default("manual")
+					.optional(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
 			if (input.sourceNoteId === input.targetNoteId) {
-				throw new TRPCError({
-					code: "BAD_REQUEST",
-					message: "Uma nota não pode ser vinculada a ela mesma",
-				});
+				throw badRequest("Uma nota não pode ser vinculada a ela mesma");
 			}
-
-			const [sourceNote] = await ctx.db
-				.select()
-				.from(notes)
-				.where(eq(notes.id, input.sourceNoteId));
-
-			if (!sourceNote) {
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message: "Nota de origem não encontrada",
-				});
-			}
-
-			const [targetNote] = await ctx.db
-				.select()
-				.from(notes)
-				.where(eq(notes.id, input.targetNoteId));
-
-			if (!targetNote) {
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message: "Nota de destino não encontrada",
-				});
-			}
+			const userId = ctx.user.id;
+			await requireActiveNote(
+				ctx.db,
+				userId,
+				input.sourceNoteId,
+				"Nota de origem não encontrada",
+			);
+			await requireActiveNote(
+				ctx.db,
+				userId,
+				input.targetNoteId,
+				"Nota de destino não encontrada",
+			);
 
 			const [existingLink] = await ctx.db
-				.select()
+				.select({ id: noteLinks.id })
 				.from(noteLinks)
 				.where(
 					and(
 						eq(noteLinks.sourceNoteId, input.sourceNoteId),
 						eq(noteLinks.targetNoteId, input.targetNoteId),
+						ne(noteLinks.linkType, "wikilink"),
 					),
 				);
-
-			if (existingLink) {
-				throw new TRPCError({
-					code: "CONFLICT",
-					message: "Este vínculo já existe entre as notas",
-				});
-			}
+			if (existingLink) throw conflict("Este vínculo já existe entre as notas");
 
 			const [newLink] = await ctx.db
 				.insert(noteLinks)
 				.values({
 					sourceNoteId: input.sourceNoteId,
 					targetNoteId: input.targetNoteId,
-					reason: input.reason.trim(),
+					reason: input.reason,
 					linkType: input.linkType ?? "manual",
 					similarityScore: "1.00",
 				})
 				.returning();
-
 			return newLink;
 		}),
 
-	removeLink: publicProcedure
-		.input(
-			z.object({
-				id: z.string().uuid(),
-			}),
-		)
+	removeLink: protectedProcedure
+		.input(z.object({ id: z.string().uuid() }))
 		.mutation(async ({ ctx, input }) => {
-			const [existing] = await ctx.db
-				.select()
+			const [link] = await ctx.db
+				.select({ id: noteLinks.id, linkType: noteLinks.linkType })
 				.from(noteLinks)
-				.where(eq(noteLinks.id, input.id));
-
-			if (!existing) {
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message: "Vínculo não encontrado",
-				});
+				.innerJoin(notes, eq(noteLinks.sourceNoteId, notes.id))
+				.where(and(eq(noteLinks.id, input.id), eq(notes.userId, ctx.user.id)));
+			if (!link) throw notFound("Vínculo não encontrado");
+			if (link.linkType === "wikilink") {
+				throw badRequest(
+					"Este vínculo vem de um [[link]] no texto: remova o link da nota.",
+				);
 			}
-
 			await ctx.db.delete(noteLinks).where(eq(noteLinks.id, input.id));
-
 			return { success: true, id: input.id };
 		}),
 
-	suggestLinks: publicProcedure
-		.input(
-			z.object({
-				noteId: z.string().uuid(),
-			}),
-		)
+	suggestLinks: protectedProcedure
+		.input(z.object({ noteId: z.string().uuid() }))
 		.query(async ({ ctx, input }) => {
-			const [currentNote] = await ctx.db
-				.select()
-				.from(notes)
-				.where(eq(notes.id, input.noteId));
-
-			if (!currentNote) {
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message: "Nota não encontrada",
-				});
-			}
+			const currentNote = await requireActiveNote(
+				ctx.db,
+				ctx.user.id,
+				input.noteId,
+			);
 
 			const existingLinks = await ctx.db
-				.select()
+				.select({
+					source: noteLinks.sourceNoteId,
+					target: noteLinks.targetNoteId,
+				})
 				.from(noteLinks)
 				.where(
 					or(
-						eq(noteLinks.sourceNoteId, input.noteId),
-						eq(noteLinks.targetNoteId, input.noteId),
+						eq(noteLinks.sourceNoteId, currentNote.id),
+						eq(noteLinks.targetNoteId, currentNote.id),
 					),
 				);
 
-			const linkedNoteIds = new Set<string>();
-			linkedNoteIds.add(currentNote.id);
+			const linkedNoteIds = new Set<string>([currentNote.id]);
 			for (const link of existingLinks) {
-				linkedNoteIds.add(link.sourceNoteId);
-				linkedNoteIds.add(link.targetNoteId);
+				linkedNoteIds.add(link.source);
+				linkedNoteIds.add(link.target);
 			}
 
 			const otherNotes = await ctx.db
 				.select()
 				.from(notes)
-				.where(eq(notes.userId, currentNote.userId));
+				.where(
+					and(eq(notes.userId, currentNote.userId), isNull(notes.deletedAt)),
+				);
 
 			const suggestions: Array<{
 				targetNoteId: string;
@@ -373,13 +529,19 @@ export const notesRouter = router({
 				linkType: "ai_suggested";
 			}> = [];
 
+			const currentTitleWords = new Set(
+				currentNote.title
+					.toLowerCase()
+					.split(/\s+/)
+					.filter((w) => w.length > 3),
+			);
+
 			for (const note of otherNotes) {
 				if (linkedNoteIds.has(note.id)) continue;
 
 				const sharedTags = currentNote.tags.filter((t) =>
 					note.tags.includes(t),
 				);
-
 				if (sharedTags.length > 0) {
 					suggestions.push({
 						targetNoteId: note.id,
@@ -406,20 +568,10 @@ export const notesRouter = router({
 					continue;
 				}
 
-				const currentTitleWords = new Set(
-					currentNote.title
-						.toLowerCase()
-						.split(/\s+/)
-						.filter((w) => w.length > 3),
-				);
-				const targetTitleWords = note.title
+				const commonWords = note.title
 					.toLowerCase()
 					.split(/\s+/)
-					.filter((w) => w.length > 3);
-
-				const commonWords = targetTitleWords.filter((w) =>
-					currentTitleWords.has(w),
-				);
+					.filter((w) => w.length > 3 && currentTitleWords.has(w));
 				if (commonWords.length > 0) {
 					suggestions.push({
 						targetNoteId: note.id,

@@ -48,6 +48,9 @@ importers:
       '@busuucsal-v3/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@busuucsal-v3/notes':
+        specifier: workspace:*
+        version: link:../../packages/notes
       '@expo-google-fonts/funnel-sans':
         specifier: ^0.4.1
         version: 0.4.2
@@ -211,6 +214,9 @@ importers:
       '@busuucsal-v3/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@busuucsal-v3/notes':
+        specifier: workspace:*
+        version: link:../../packages/notes
       '@fastify/cors':
         specifier: ^11.0.1
         version: 11.3.0
@@ -225,7 +231,7 @@ importers:
         version: 17.4.2
       drizzle-orm:
         specifier: ^0.44.2
-        version: 0.44.7(@types/pg@8.23.1)(pg@8.23.0)
+        version: 0.44.7(@electric-sql/pglite@0.5.16)(@types/pg@8.23.1)(pg@8.23.0)
       fastify:
         specifier: ^5.3.3
         version: 5.12.1
@@ -242,6 +248,9 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.16
+        version: 0.5.16
       '@types/node':
         specifier: ^22.20.1
         version: 22.20.1
@@ -303,6 +312,21 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+
+  packages/notes:
+    devDependencies:
+      '@busuucsal-v3/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^22.20.1
+        version: 22.20.1
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(jsdom@20.0.3)(lightningcss@1.33.0)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0)
 
 packages:
 
@@ -856,6 +880,9 @@ packages:
   '@egjs/hammerjs@2.0.17':
     resolution: {integrity: sha512-XQsZgjm2EcVUiZQf11UBJQfmZeEmOW8DpI1gsFeln6w0ae0ii4dMQEQ0kjl6DspdWX1aGY1/loyXnP0JS06e/A==}
     engines: {node: '>=0.8.0'}
+
+  '@electric-sql/pglite@0.5.16':
+    resolution: {integrity: sha512-Nj8KcIsJL748W408U2N8q4+9IlONdpRIU8MJypIAAINMJ5nqKyqpX7Mgg/5XKkXiAib3AoZGR6hnJFlrlLBrcg==}
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
@@ -6568,6 +6595,8 @@ snapshots:
     dependencies:
       '@types/hammerjs': 2.0.46
 
+  '@electric-sql/pglite@0.5.16': {}
+
   '@esbuild-kit/core-utils@3.3.2':
     dependencies:
       esbuild: 0.18.20
@@ -8827,8 +8856,9 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.12
 
-  drizzle-orm@0.44.7(@types/pg@8.23.1)(pg@8.23.0):
+  drizzle-orm@0.44.7(@electric-sql/pglite@0.5.16)(@types/pg@8.23.1)(pg@8.23.0):
     optionalDependencies:
+      '@electric-sql/pglite': 0.5.16
       '@types/pg': 8.23.1
       pg: 8.23.0
 
