@@ -25,6 +25,28 @@ export type TrpcSyncedCourse = {
 	}>;
 };
 
+/** Andamento da leitura de um PDF pelo servidor (ingestão). */
+export type IngestionStatus =
+	| "pending"
+	| "processing"
+	| "ready"
+	| "failed"
+	| "unsupported";
+
+/** Motivo curto devolvido pelo servidor para PDFs não suportados ou com falha. */
+export type IngestionReason = "no_file" | "scanned" | "format" | "error";
+
+export type IngestionStatusResponse = {
+	totalPdfs: number;
+	counts: Record<string, number>;
+	materials: Array<{
+		id: string;
+		title: string;
+		status: IngestionStatus;
+		reason: IngestionReason | null;
+	}>;
+};
+
 export type SyncFromClassroomResponse = {
 	syncedCourses: number;
 	syncedMaterials: number;
@@ -277,6 +299,24 @@ export const trpc = {
 		listByClass: {
 			query: async (input: { classSessionId: string }) =>
 				callTrpcHttp("materials.listByClass", "GET", input, []),
+		},
+		/** `null` quando o servidor não responde ou a aula não é real (ex.: dados de exemplo). */
+		ingestionStatus: {
+			query: async (input: {
+				classSessionId: string;
+			}): Promise<IngestionStatusResponse | null> =>
+				callTrpcHttp<IngestionStatusResponse | null>(
+					"materials.ingestionStatus",
+					"GET",
+					input,
+					null,
+				),
+		},
+		startIngestion: {
+			mutate: async (input: { classSessionId: string }) =>
+				callTrpcHttp("materials.startIngestion", "POST", input, {
+					started: false,
+				}),
 		},
 	},
 	quiz: {

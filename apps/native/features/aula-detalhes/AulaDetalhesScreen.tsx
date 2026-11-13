@@ -21,6 +21,7 @@ import { TabSwitcher } from "@/components/molecules/TabSwitcher";
 import { InsightCard } from "@/components/organisms/InsightCard";
 import { QuizSourcesCard } from "@/components/organisms/QuizSourcesCard";
 import { useAulaDetalhesViewModel } from "@/features/aula-detalhes/aulaDetalhes.viewmodel";
+import { useIngestionStatus } from "@/features/aula-detalhes/ingestionStatus.viewmodel";
 
 const FILE_ICON: Record<string, React.ReactNode> = {
 	"file-text": <Download size={16} color="#582CFF" />,
@@ -38,9 +39,21 @@ export function AulaDetalhesScreen() {
 	const { data, activeTab, setActiveTab, openMaterial, updateSchedule } =
 		useAulaDetalhesViewModel(params?.id);
 
+	const { status: ingestion, retry: retryIngestion } = useIngestionStatus(
+		data.id,
+		activeTab === "ia",
+	);
+	const ingestionById = new Map(
+		(ingestion?.materials ?? []).map((material) => [material.id, material]),
+	);
 	const quizSources = data.files
 		.filter((file) => file.materialType === "pdf")
-		.map((file) => ({ id: file.id, name: file.name }));
+		.map((file) => ({
+			id: file.id,
+			name: file.name,
+			status: ingestionById.get(file.id)?.status,
+			reason: ingestionById.get(file.id)?.reason,
+		}));
 
 	const [isEditingSchedule, setIsEditingSchedule] = useState(false);
 	const [startTimeInput, setStartTimeInput] = useState(
@@ -280,6 +293,7 @@ export function AulaDetalhesScreen() {
 						{quizSources.length > 0 ? (
 							<QuizSourcesCard
 								sources={quizSources}
+								onRetry={retryIngestion}
 								onGenerateAll={() =>
 									router.push(`/quiz?classSessionId=${data.id}` as Href)
 								}

@@ -160,7 +160,7 @@ describe("AulaDetalhesScreen", () => {
 		expect(screen.queryByTestId("quiz-source-mat-video-1")).toBeNull();
 
 		await act(async () => {
-			fireEvent.press(screen.getByText("Quiz com todos os materiais"));
+			fireEvent.press(screen.getByText("Quiz com todos · 1 PDF"));
 		});
 		expect(mockPush).toHaveBeenCalledWith("/quiz?classSessionId=aula-eng-soft-04");
 

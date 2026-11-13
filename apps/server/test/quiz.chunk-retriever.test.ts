@@ -266,8 +266,8 @@ describe("rotas de materiais", () => {
 		expect(status.totalPdfs).toBe(2);
 		expect(status.counts).toEqual({ ready: 1, failed: 1 });
 		expect(status.materials).toEqual([
-			{ id: "m1", title: "A.pdf", status: "ready" },
-			{ id: "m2", title: "B.pdf", status: "failed" },
+			{ id: "m1", title: "A.pdf", status: "ready", reason: null },
+			{ id: "m2", title: "B.pdf", status: "failed", reason: "error" },
 		]);
 	});
 
