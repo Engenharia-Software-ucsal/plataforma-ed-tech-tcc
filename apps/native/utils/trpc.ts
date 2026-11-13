@@ -252,6 +252,18 @@ export const trpc = {
 		me: {
 			query: async () => callTrpcHttp("auth.me", "GET", undefined, null),
 		},
+		/** Encerra a sessão no servidor. Falha de rede não impede o logout local. */
+		logout: {
+			mutate: async () =>
+				callTrpcHttp("auth.logout", "POST", undefined, { ok: true }),
+		},
+		/** Apaga a conta e os dados. Lança erro se falhar: nunca finge que apagou. */
+		deleteAccount: {
+			mutate: async (input: { confirmation: string }) =>
+				callTrpcHttpOrThrow("auth.deleteAccount", "POST", input, {
+					deleted: true,
+				}),
+		},
 	},
 	class: {
 		list: {

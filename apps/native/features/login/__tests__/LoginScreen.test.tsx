@@ -24,7 +24,7 @@ describe("LoginScreen", () => {
 			</Provider>,
 		);
 
-		expect(screen.getByText("Compasso UCSAL")).toBeTruthy();
+		expect(screen.getByText("Plataforma EdTech")).toBeTruthy();
 		expect(
 			screen.getByText(
 				"Li e concordo com o Termo de Consentimento (TCLE) e Tratamento de Dados Acadêmicos (LGPD)",

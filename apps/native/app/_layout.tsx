@@ -21,7 +21,6 @@ function StackLayout() {
 		<Stack screenOptions={{ headerShown: false }}>
 			<Stack.Screen name="login" />
 			<Stack.Screen name="(tabs)" />
-			<Stack.Screen name="perfil" />
 			<Stack.Screen name="aula-detalhes" />
 			<Stack.Screen name="nota-detalhes" />
 			<Stack.Screen name="quiz" />

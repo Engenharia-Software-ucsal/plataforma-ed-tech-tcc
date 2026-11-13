@@ -78,6 +78,18 @@ export async function authenticateWithGoogle(
 	return { sessionId, user };
 }
 
+/** Revoga o token no Google. Falha de rede não impede o resto (só é registrada). */
+export async function revokeGoogleToken(token: string): Promise<void> {
+	try {
+		await client.revokeToken(token);
+	} catch (err) {
+		console.warn(
+			"[auth] não foi possível revogar o token do Google:",
+			err instanceof Error ? err.message : err,
+		);
+	}
+}
+
 export async function validateSession(sessionId: string) {
 	const result = await db
 		.select({

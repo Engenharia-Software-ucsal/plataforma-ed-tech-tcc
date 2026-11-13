@@ -6,7 +6,7 @@
 		"web": {
 			"bundler": "metro"
 		},
-		"name": "busuucsal-v3",
+		"name": "Plataforma EdTech",
 		"slug": "busuucsal-v3",
 		"plugins": [
 			"expo-font",

@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { BookOpen, FileText } from "lucide-react-native";
+import { BookOpen, FileText, User } from "lucide-react-native";
 
 export default function TabLayout() {
 	return (
@@ -28,6 +28,13 @@ export default function TabLayout() {
 					tabBarIcon: ({ color, size }) => (
 						<FileText size={size} color={color} />
 					),
+				}}
+			/>
+			<Tabs.Screen
+				name="perfil"
+				options={{
+					title: "Perfil",
+					tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
 				}}
 			/>
 		</Tabs>

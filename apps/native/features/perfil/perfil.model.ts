@@ -11,9 +11,14 @@ export type ConnectedAccount = {
 	icon: "graduation-cap";
 };
 
+export const INSTITUTIONAL_DOMAIN = "@ucsal.edu.br";
+
+/** Palavra que o aluno digita para confirmar a exclusão da conta. */
+export const DELETE_CONFIRMATION = "EXCLUIR";
+
 export const CURRENT_USER: UserProfile = {
 	name: "João Silva",
-	email: "joao.silva@ucsal.br",
+	email: "joao.silva@ucsal.edu.br",
 	initials: "JS",
 };
 
@@ -25,3 +30,7 @@ export const CONNECTED_ACCOUNTS: ConnectedAccount[] = [
 		icon: "graduation-cap",
 	},
 ];
+
+export function isInstitutionalEmail(email: string): boolean {
+	return email.trim().toLowerCase().endsWith(INSTITUTIONAL_DOMAIN);
+}

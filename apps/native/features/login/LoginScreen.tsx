@@ -28,7 +28,7 @@ export const LoginScreen: LoginScreenType = () => {
 					tone="primary"
 					className="font-bold text-[26px]"
 				>
-					Compasso UCSAL
+					Plataforma EdTech
 				</AppText>
 				<AppText variant="body" tone="muted" className="text-center text-sm">
 					Aulas, materiais e tutoria inteligente em um só lugar
