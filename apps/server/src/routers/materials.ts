@@ -4,6 +4,7 @@ import { z } from "zod";
 import { courseMaterials } from "../db/schema/index.js";
 import { isUserEnrolled } from "../services/class-enrollment.service.js";
 import { startBackgroundIngestion } from "../services/ingestion/background.js";
+import { ingestionReason } from "../services/ingestion/ports.js";
 import { protectedProcedure, publicProcedure, router } from "../trpc/index.js";
 
 const classInput = z.object({ classSessionId: z.string().uuid() });
@@ -22,7 +23,7 @@ export const materialsRouter = router({
 			.where(eq(courseMaterials.classSessionId, input.classSessionId));
 	}),
 
-	/** Andamento da leitura dos PDFs da aula (sem expor mensagens internas de erro). */
+	/** Andamento da leitura dos PDFs da aula, com um motivo curto (nunca a mensagem interna de erro). */
 	ingestionStatus: protectedProcedure.input(classInput).query(async ({ ctx, input }) => {
 		await assertEnrolled(ctx, input.classSessionId);
 		const materials = await ctx.db
@@ -41,6 +42,7 @@ export const materialsRouter = router({
 				id: m.id,
 				title: m.title,
 				status: m.ingestionStatus,
+				reason: ingestionReason(m.ingestionStatus, m.ingestionError),
 			})),
 		};
 	}),

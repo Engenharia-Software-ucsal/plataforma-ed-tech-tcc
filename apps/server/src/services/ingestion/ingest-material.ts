@@ -10,6 +10,7 @@ import {
 	type EmbeddingProvider,
 	type FileDownloader,
 	type TextExtractor,
+	UNSUPPORTED_MESSAGES,
 	UnsupportedMaterialError,
 } from "./ports.js";
 
@@ -34,7 +35,7 @@ export async function ingestMaterial(
 	try {
 		const driveFileId = extractDriveFileId(material);
 		if (!driveFileId) {
-			throw new UnsupportedMaterialError("Material sem arquivo do Drive vinculado.");
+			throw new UnsupportedMaterialError(UNSUPPORTED_MESSAGES.no_file);
 		}
 
 		const { buffer, mimeType } = await deps.downloader.download(
@@ -42,14 +43,12 @@ export async function ingestMaterial(
 			refreshToken,
 		);
 		if (mimeType !== "application/pdf") {
-			throw new UnsupportedMaterialError(`Formato não suportado: ${mimeType}.`);
+			throw new UnsupportedMaterialError(`${UNSUPPORTED_MESSAGES.format}: ${mimeType}.`);
 		}
 
 		const text = (await deps.extractor.extract(buffer)).trim();
 		if (text.length < MIN_TEXT_CHARS) {
-			throw new UnsupportedMaterialError(
-				"PDF sem texto extraível (provavelmente escaneado).",
-			);
+			throw new UnsupportedMaterialError(UNSUPPORTED_MESSAGES.scanned);
 		}
 
 		const allChunks = chunkText(text);
